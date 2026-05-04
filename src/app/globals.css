@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ffffff; /* Pure White */
+  --color-surface: #ffffff;
+  --color-surface-dim: #f5f5f5;
+  --color-primary: #000000; /* Pure Black */
+  --color-on-primary: #ffffff;
+  --color-accent-gold: #c5a059; /* Muted Premium Gold */
+  --color-accent-gold-hover: #b08d4a;
+  --color-text-main: #000000;
+  --color-text-muted: #4a4a4a;
+  --color-white: #ffffff;
+  --color-outline-ghost: #e5e5e5;
+
+  --font-headline: var(--font-noto-serif), serif;
+  --font-body: var(--font-inter), sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-text-main font-body antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline font-normal;
+  }
+}
+
+@layer components {
+  .container {
+    @apply w-full max-w-7xl mx-auto px-6 md:px-12;
+  }
+  
+  .btn {
+    @apply inline-block px-6 py-3 border-none cursor-pointer font-body font-semibold tracking-wide uppercase text-sm transition-all duration-300 rounded shadow-md hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-md;
+  }
+  
+  .btn-gold {
+    @apply bg-accent-gold text-primary hover:bg-accent-gold-hover;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white border border-outline-ghost hover:bg-surface-dim hover:text-black;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent text-text-main border border-text-main hover:bg-text-main hover:text-white;
+  }
+  
+  .card {
+    @apply bg-surface border border-outline-ghost rounded-lg shadow-xl;
+  }
+  
+  .input-group {
+    @apply mb-6;
+  }
+  
+  .input-label {
+    @apply block text-sm font-semibold tracking-wider text-text-muted mb-2 uppercase;
+  }
+  
+  .input-field {
+    @apply w-full p-4 bg-background border border-outline-ghost text-text-main font-body text-base rounded transition-colors duration-300 focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold;
+  }
+}

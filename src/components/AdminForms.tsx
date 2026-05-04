@@ -1,0 +1,184 @@
+"use client";
+
+import { useState } from "react";
+import { updateHeroImage, createRoom, updateSiteSettings, promoteToAdmin } from "@/lib/adminActions";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
+export function HeroImageForm() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    try {
+      const res = await updateHeroImage(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Hero image updated successfully!");
+        router.refresh();
+      }
+    } catch (e) {
+      toast.error("Failed to upload image.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form action={handleSubmit} className="mb-8 border-b border-outline-ghost pb-8">
+      <div className="input-group">
+        <label className="input-label">Hero Image File</label>
+        <input type="file" name="heroImage" className="input-field" accept="image/*" required />
+      </div>
+      <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+        {loading ? "Uploading..." : "Upload Hero Image"}
+      </button>
+    </form>
+  );
+}
+
+export function SiteSettingsForm({ settings }: { settings: any }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    try {
+      const res = await updateSiteSettings(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Settings updated successfully!");
+        router.refresh();
+      }
+    } catch (e) {
+      toast.error("Failed to update settings.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <div className="input-group">
+        <label className="input-label">Admin Email (For Notifications)</label>
+        <input type="email" name="adminEmail" className="input-field" defaultValue={settings.adminEmail || ""} />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Public Contact Phone</label>
+        <input type="text" name="contactPhone" className="input-field" defaultValue={settings.contactPhone || ""} />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Public Contact Email</label>
+        <input type="email" name="contactEmail" className="input-field" defaultValue={settings.contactEmail || ""} />
+      </div>
+      
+      <h3 className="text-lg font-headline tracking-widest text-text-main mt-8 mb-4 uppercase">Bank Details</h3>
+      <div className="input-group">
+        <label className="input-label">Bank Name</label>
+        <input type="text" name="bankName" className="input-field" defaultValue={settings.bankName || ""} />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Account Number</label>
+        <input type="text" name="accountNumber" className="input-field" defaultValue={settings.accountNumber || ""} />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Account Name</label>
+        <input type="text" name="accountName" className="input-field" defaultValue={settings.accountName || ""} />
+      </div>
+
+      <h3 className="text-lg font-headline tracking-widest text-text-main mt-8 mb-4 uppercase">Billing Address</h3>
+      <div className="input-group">
+        <label className="input-label">Physical Address</label>
+        <textarea name="billingAddress" className="input-field" rows={3} defaultValue={settings.billingAddress || ""} />
+      </div>
+      <button type="submit" className="btn btn-outline w-full mt-4" disabled={loading}>
+        {loading ? "Saving..." : "Update All Settings"}
+      </button>
+    </form>
+  );
+}
+
+export function CreateRoomForm() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    try {
+      const res = await createRoom(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Room created successfully!");
+        router.refresh();
+      }
+    } catch (e) {
+      toast.error("Failed to create room.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <div className="input-group">
+        <label className="input-label">Room Name</label>
+        <input type="text" name="name" className="input-field" required />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Room Class (e.g. Suite)</label>
+        <input type="text" name="roomClass" className="input-field" placeholder="Standard, Suite, Penthouse..." />
+      </div>
+      <div className="input-group">
+        <label className="input-label">Description</label>
+        <textarea name="description" className="input-field" rows={3} required></textarea>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <label className="input-label">Price per Night (₦)</label>
+          <input type="number" name="pricePerNight" className="input-field" required />
+        </div>
+        <div className="flex-1">
+          <label className="input-label">Capacity (Persons)</label>
+          <input type="number" name="capacity" className="input-field" required />
+        </div>
+      </div>
+      <div className="input-group">
+        <label className="input-label">Room Image File</label>
+        <input type="file" name="image" className="input-field" accept="image/*" />
+      </div>
+      <button type="submit" className="btn btn-gold w-full" disabled={loading}>
+        {loading ? "Creating..." : "Create Room"}
+      </button>
+    </form>
+  );
+}
+
+export function AdminPromotionForm() {
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    try {
+      const res = await promoteToAdmin(formData);
+      if (res?.error) toast.error(res.error);
+      else toast.success("User promoted to Admin!");
+    } catch (e) {
+      toast.error("Failed to promote user.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <div className="input-group">
+        <label className="input-label">User Email</label>
+        <input type="email" name="email" className="input-field" required placeholder="user@example.com" />
+      </div>
+      <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+        {loading ? "Processing..." : "Make Admin"}
+      </button>
+    </form>
+  );
+}
