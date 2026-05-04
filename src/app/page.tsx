@@ -39,9 +39,14 @@ export default async function Home() {
               <LogoutButton />
             </div>
           ) : (
-            <Link href="/login" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
-              Login
-            </Link>
+            <div className="flex gap-4 md:gap-8 items-center">
+              <Link href="/login" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+                Login
+              </Link>
+              <Link href="/register" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors border border-white/20 px-4 py-2 rounded hover:bg-white hover:text-black">
+                Register
+              </Link>
+            </div>
           )}
         </div>
       </nav>
@@ -55,15 +60,22 @@ export default async function Home() {
           <div className="absolute inset-0 bg-black/60"></div>
         </div>
         
-        <h1 className="font-headline text-5xl md:text-7xl text-white mb-6 uppercase tracking-widest drop-shadow-lg">
+        <h1 className="font-headline text-5xl md:text-8xl text-white mb-6 uppercase tracking-[0.2em] drop-shadow-2xl font-bold">
           Djace Hotels & Lounge
         </h1>
-        <p className="font-body text-lg md:text-xl text-gray-200 mb-10 max-w-2xl tracking-wide font-light">
+        <p className="font-body text-lg md:text-2xl text-white/90 mb-10 max-w-3xl tracking-wide font-light italic">
           Experience unparalleled luxury and breathtaking views in the heart of the city.
         </p>
-        <Link href="/rooms" className="btn btn-gold text-lg px-8 py-4">
-          Book Your Stay
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-6">
+          <Link href="/rooms" className="btn btn-gold text-lg px-10 py-5">
+            Book Your Stay
+          </Link>
+          {!session && (
+            <Link href="/register" className="btn btn-primary text-lg px-10 py-5 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white hover:text-black">
+              Register Now
+            </Link>
+          )}
+        </div>
       </section>
 
       {/* Featured Rooms */}
