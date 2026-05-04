@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcrypt";
+import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface User {
@@ -16,8 +17,6 @@ declare module "next-auth" {
   }
 }
 
-import { DefaultSession } from "next-auth";
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     CredentialsProvider({
@@ -26,7 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email", placeholder: "email@example.com" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
         
         try {
@@ -45,7 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               id: user._id.toString(),
               email: user.email,
               name: user.name,
-              role: user.role, // custom claim
+              role: user.role,
             };
           }
           return null;

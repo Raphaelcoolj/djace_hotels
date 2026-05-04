@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 import { signIn } from "../../auth";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 export async function register(formData: FormData) {
   const name = formData.get("name") as string;
@@ -60,7 +59,7 @@ export async function login(formData: FormData) {
           return { error: "Something went wrong." };
       }
     }
-    throw error; // nextjs redirects throw errors, need to rethrow them
+    throw error;
   }
 }
 
@@ -88,7 +87,6 @@ export async function createBooking(formData: FormData) {
     const inDate = new Date(checkInDate);
     const outDate = new Date(checkOutDate);
     
-    // Simple calculation
     const diffTime = Math.abs(outDate.getTime() - inDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
     const totalPrice = diffDays * room.pricePerNight;
@@ -105,7 +103,6 @@ export async function createBooking(formData: FormData) {
 
     await newBooking.save();
     
-    // Send email to admin
     try {
       const { sendEmail } = await import("./email");
       const SiteSetting = await import("@/models/SiteSetting").then(m => m.default);
@@ -118,8 +115,7 @@ export async function createBooking(formData: FormData) {
           subject: "New Booking Received - Djace Hotels",
           html: `<p>A new booking has been made by ${session.user.name} (${session.user.email}).</p>
                  <p>Room: ${room.name}</p>
-                 <p>Dates: ${inDate.toLocaleDateString()} to ${outDate.toLocaleDateString()}</p>
-                 <p>Please log in to the admin dashboard to approve or decline.</p>`,
+                 <p>Dates: ${inDate.toLocaleDateString()} to ${outDate.toLocaleDateString()}</p>`,
         });
       }
     } catch (emailError) {
@@ -146,8 +142,6 @@ export async function submitFeedback(formData: FormData) {
   try {
     await connectDB();
     const Feedback = await import("@/models/Feedback").then(m => m.default);
-    
-    // We try to get session to link feedback to a user if they are logged in
     const session = await import("../../auth").then(m => m.auth());
     
     const newFeedback = new Feedback({
@@ -161,6 +155,6 @@ export async function submitFeedback(formData: FormData) {
     await newFeedback.save();
     return { success: true };
   } catch (error) {
-    return { error: "Failed to submit feedback. Please try again." };
+    return { error: "Failed to submit feedback." };
   }
 }
