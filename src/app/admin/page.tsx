@@ -9,7 +9,16 @@ import { HeroImageForm, SiteSettingsForm, CreateRoomForm, AdminPromotionForm } f
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 
+import { auth } from "../../../auth";
+import { redirect } from "next/navigation";
+
 export default async function AdminDashboard() {
+  const session = await auth();
+
+  if (session?.user?.role !== "admin") {
+    redirect("/login");
+  }
+
   await connectDB();
   const rooms = await Room.find().sort({ createdAt: -1 });
   const bookings = await Booking.find().populate("room user").sort({ createdAt: -1 }).limit(20);
