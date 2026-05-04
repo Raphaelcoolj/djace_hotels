@@ -60,11 +60,11 @@ export default async function Home() {
           <div className="absolute inset-0 bg-black/60"></div>
         </div>
         
-        <h1 className="font-headline text-5xl md:text-8xl text-white mb-6 uppercase tracking-[0.2em] drop-shadow-2xl font-bold">
+        <h1 className="font-headline text-5xl md:text-6xl text-white mb-6 uppercase tracking-[0.2em] drop-shadow-2xl font-bold">
           Djace Hotels & Lounge
         </h1>
-        <p className="font-body text-lg md:text-2xl text-white/90 mb-10 max-w-3xl tracking-wide font-light italic">
-          Experience unparalleled luxury and breathtaking views in the heart of the city.
+        <p className="font-body text-lg md:text-xl text-white/90 mb-10 max-w-3xl tracking-wide font-light italic">
+          Where refined elegance meets timeless comfort—your exclusive retreat for unforgettable moments.
         </p>
         <div className="flex flex-col sm:flex-row gap-6">
           <Link href="/rooms" className="btn btn-gold text-lg px-10 py-5">
