@@ -31,7 +31,7 @@ export default async function Home() {
           <Link href="/feedback" className="hidden md:inline text-white font-body text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
             Feedback
           </Link>
-          {session ? (
+          {session?.user?.email ? (
             <div className="flex gap-4 md:gap-8 items-center">
               <Link href="/dashboard" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
                 Dashboard
@@ -70,7 +70,7 @@ export default async function Home() {
           <Link href="/rooms" className="btn btn-gold text-lg px-10 py-5">
             Book Your Stay
           </Link>
-          {!session && (
+          {!session?.user?.email && (
             <Link href="/register" className="btn btn-primary text-lg px-10 py-5 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white hover:text-black">
               Register Now
             </Link>

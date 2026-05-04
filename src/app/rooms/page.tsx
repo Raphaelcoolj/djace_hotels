@@ -4,21 +4,47 @@ import SiteSetting from "@/models/SiteSetting";
 import { formatPrice } from "@/lib/format";
 import Link from "next/link";
 
+import { auth } from "../../../auth";
+import LogoutButton from "@/components/LogoutButton";
+
 export default async function RoomsPage() {
   await connectDB();
   const rooms = await Room.find({ isAvailable: true }).sort({ pricePerNight: 1 });
   const phoneSetting = await SiteSetting.findOne({ key: "contact_phone" });
   const emailSetting = await SiteSetting.findOne({ key: "contact_email" });
+  const session = await auth();
 
   return (
     <main className="min-h-screen bg-background">
-      <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
-        <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
+      <nav className="bg-black/90 sticky top-0 w-full z-50 px-4 md:px-8 py-6 flex justify-between items-center border-b border-white/10 backdrop-blur-md">
+        <Link href="/" className="text-white font-headline text-2xl md:text-3xl tracking-widest uppercase">
           DJACE
         </Link>
-        <Link href="/dashboard" className="text-white/70 text-[10px] md:text-sm uppercase tracking-widest hover:text-accent-gold transition-colors font-body">
-          Dashboard
-        </Link>
+        <div className="flex gap-4 md:gap-8 items-center">
+          <Link href="/rooms" className="text-accent-gold font-body text-[10px] md:text-sm tracking-widest uppercase">
+            Rooms
+          </Link>
+          <Link href="/feedback" className="hidden md:inline text-white font-body text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+            Feedback
+          </Link>
+          {session?.user?.email ? (
+            <div className="flex gap-4 md:gap-8 items-center">
+              <Link href="/dashboard" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+                Dashboard
+              </Link>
+              <LogoutButton />
+            </div>
+          ) : (
+            <div className="flex gap-4 md:gap-8 items-center">
+              <Link href="/login" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+                Login
+              </Link>
+              <Link href="/register" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors border border-white/20 px-4 py-2 rounded hover:bg-white hover:text-black">
+                Register
+              </Link>
+            </div>
+          )}
+        </div>
       </nav>
 
       <div className="container py-16">

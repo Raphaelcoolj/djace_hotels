@@ -16,7 +16,8 @@ export default function LogoutButton() {
             .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
         });
         
-        window.location.href = "/";
+        // Force a complete reload from the server
+        window.location.href = window.location.origin + "/?logout=" + Date.now();
       }}
       className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors cursor-pointer"
     >
