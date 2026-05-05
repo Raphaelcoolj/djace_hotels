@@ -81,7 +81,7 @@ export default async function Home() {
       <section className="py-24 bg-background">
         <div className="container">
           <div className="text-center mb-16">
-            <h2 className="text-4xl text-text-main mb-4 uppercase tracking-widest">Featured Accommodations</h2>
+            <h2 className="text-2xl md:text-4xl text-text-main mb-4 uppercase tracking-widest">Featured Accommodations</h2>
             <div className="w-16 h-0.5 bg-accent-gold mx-auto"></div>
           </div>
           
