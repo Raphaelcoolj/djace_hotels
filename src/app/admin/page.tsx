@@ -7,6 +7,7 @@ import SiteSetting from "@/models/SiteSetting";
 import AdminBookingActions from "@/components/AdminBookingActions";
 import { HeroImageForm, SiteSettingsForm, CreateRoomForm, AdminPromotionForm, RoomManagementActions } from "@/components/AdminForms";
 import Link from "next/link";
+import LogoutButton from "@/components/LogoutButton";
 import { formatPrice } from "@/lib/format";
 
 import { auth } from "../../../auth";
