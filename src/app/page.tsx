@@ -20,30 +20,27 @@ export default async function Home() {
   return (
     <main className="min-h-screen">
       {/* Navigation */}
-      <nav className="absolute top-0 w-full z-50 px-4 md:px-8 py-4 md:py-6 flex justify-between items-center bg-black/30 backdrop-blur-sm border-b border-white/10">
-        <Link href="/" className="text-white font-headline text-xl md:text-3xl tracking-widest uppercase">
+      <nav className="absolute top-0 w-full z-50 px-6 md:px-8 py-5 md:py-6 flex justify-between items-center bg-black/40 backdrop-blur-md border-b border-white/10">
+        <Link href="/" className="text-white font-headline text-lg md:text-3xl tracking-[0.2em] uppercase">
           DJACE
         </Link>
-        <div className="flex gap-3 md:gap-8 items-center">
-          <Link href="/rooms" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+        <div className="flex gap-4 md:gap-8 items-center">
+          <Link href="/rooms" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
             Rooms
           </Link>
-          <Link href="/feedback" className="hidden sm:inline text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
-            Feedback
-          </Link>
           {session?.user?.email ? (
-            <div className="flex gap-3 md:gap-8 items-center">
-              <Link href="/dashboard" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+            <div className="flex gap-4 md:gap-8 items-center">
+              <Link href="/dashboard" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
                 Dashboard
               </Link>
               <LogoutButton />
             </div>
           ) : (
-            <div className="flex gap-3 md:gap-8 items-center">
-              <Link href="/login" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+            <div className="flex gap-4 md:gap-8 items-center">
+              <Link href="/login" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
                 Login
               </Link>
-              <Link href="/register" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors border border-white/20 px-3 md:px-4 py-1.5 md:py-2 rounded hover:bg-white hover:text-black">
+              <Link href="/register" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase border border-white/20 px-3 py-2 rounded hover:bg-white hover:text-black transition-all">
                 Register
               </Link>
             </div>
@@ -52,7 +49,7 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex flex-col justify-center items-center text-center px-6">
+      <section className="relative h-screen flex flex-col justify-center items-center text-center px-8">
         <div 
           className="absolute inset-0 z-[-1] bg-cover bg-center"
           style={{ backgroundImage: `url(${heroImageUrl})` }}
@@ -60,21 +57,23 @@ export default async function Home() {
           <div className="absolute inset-0 bg-black/60"></div>
         </div>
         
-        <h1 className="font-headline text-3xl sm:text-5xl md:text-6xl text-white mb-6 uppercase tracking-[0.15em] md:tracking-[0.2em] drop-shadow-2xl font-bold leading-tight">
-          Djace Hotels <br className="sm:hidden" /> & Lounge
-        </h1>
-        <p className="font-body text-base md:text-xl text-white/90 mb-10 max-w-3xl tracking-wide font-light italic px-4">
-          Where refined elegance meets timeless comfort—your exclusive retreat for unforgettable moments.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 md:gap-6 w-full sm:w-auto max-w-[280px] sm:max-w-none">
-          <Link href="/rooms" className="btn btn-gold text-base md:text-lg px-8 md:px-10 py-4 md:py-5">
-            Book Your Stay
-          </Link>
-          {!session?.user?.email && (
-            <Link href="/register" className="btn btn-primary text-base md:text-lg px-8 md:px-10 py-4 md:py-5 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white hover:text-black">
-              Register Now
+        <div className="max-w-4xl mx-auto">
+          <h1 className="font-headline text-2xl sm:text-5xl md:text-6xl text-white mb-6 uppercase tracking-[0.1em] md:tracking-[0.2em] drop-shadow-2xl font-bold leading-tight">
+            Djace Hotels <br className="sm:hidden" /> & Lounge
+          </h1>
+          <p className="font-body text-sm md:text-xl text-white/80 mb-12 max-w-2xl mx-auto tracking-wide font-light italic leading-relaxed">
+            Where refined elegance meets timeless comfort—your exclusive retreat for unforgettable moments.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center items-center">
+            <Link href="/rooms" className="btn btn-gold w-full sm:w-auto text-sm md:text-lg px-10 py-4 md:py-5 min-w-[240px]">
+              Book Your Stay
             </Link>
-          )}
+            {!session?.user?.email && (
+              <Link href="/register" className="btn btn-primary w-full sm:w-auto text-sm md:text-lg px-10 py-4 md:py-5 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white hover:text-black transition-all min-w-[240px]">
+                Register Now
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 

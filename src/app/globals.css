@@ -17,6 +17,10 @@
   --font-body: var(--font-inter), sans-serif;
 }
 
+html, body {
+  @apply overflow-x-hidden w-full;
+}
+
 @layer base {
   body {
     @apply bg-background text-text-main font-body antialiased;
