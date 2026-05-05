@@ -165,3 +165,78 @@ export async function promoteToAdmin(formData: FormData) {
     return { error: "Failed to promote user" };
   }
 }
+
+export async function deleteRoom(formData: FormData) {
+  const roomId = formData.get("roomId") as string;
+  if (!roomId) return { error: "Room ID is required" };
+
+  try {
+    await connectDB();
+    const Room = await import("@/models/Room").then(m => m.default);
+    await Room.findByIdAndDelete(roomId);
+    
+    revalidatePath("/admin");
+    revalidatePath("/rooms");
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to delete room" };
+  }
+}
+
+export async function toggleRoomAvailability(formData: FormData) {
+  const roomId = formData.get("roomId") as string;
+  const isAvailable = formData.get("isAvailable") === "true";
+
+  try {
+    await connectDB();
+    const Room = await import("@/models/Room").then(m => m.default);
+    await Room.findByIdAndUpdate(roomId, { isAvailable: !isAvailable });
+    
+    revalidatePath("/admin");
+    revalidatePath("/rooms");
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to update room status" };
+  }
+}
+
+export async function updateRoom(formData: FormData) {
+  const roomId = formData.get("roomId") as string;
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const pricePerNight = Number(formData.get("pricePerNight"));
+  const capacity = Number(formData.get("capacity"));
+  const roomClass = formData.get("roomClass") as string;
+  const imageFile = formData.get("image") as File;
+
+  if (!roomId) return { error: "Room ID is required" };
+
+  try {
+    await connectDB();
+    const Room = await import("@/models/Room").then(m => m.default);
+    
+    let updateData: any = {
+      name,
+      description,
+      pricePerNight,
+      capacity,
+      roomClass
+    };
+
+    if (imageFile && imageFile.size > 0) {
+      const imageUrl = await uploadImage(imageFile);
+      updateData.images = [imageUrl];
+    }
+
+    await Room.findByIdAndUpdate(roomId, updateData);
+    
+    revalidatePath("/admin");
+    revalidatePath("/rooms");
+    revalidatePath(`/rooms/${roomId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to update room" };
+  }
+}
+
+

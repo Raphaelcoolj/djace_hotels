@@ -34,10 +34,10 @@ export default async function DashboardPage() {
         <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
           DJACE
         </Link>
-        <div className="flex items-center gap-4 md:gap-6">
-          <span className="text-white/70 text-xs hidden sm:inline font-body">Welcome, {session.user.name}</span>
+        <div className="flex items-center gap-3 md:gap-6">
+          <span className="text-white/70 text-[10px] sm:text-xs hidden sm:inline font-body">Welcome, {session.user.name}</span>
           {session.user.role === "admin" && (
-            <Link href="/admin" className="text-accent-gold text-[10px] md:text-sm tracking-widest uppercase hover:text-white transition-colors">
+            <Link href="/admin" className="text-accent-gold text-[11px] md:text-sm tracking-widest uppercase hover:text-white transition-colors">
               Admin
             </Link>
           )}

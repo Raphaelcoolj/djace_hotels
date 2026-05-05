@@ -5,7 +5,7 @@ import Booking from "@/models/Booking";
 import Feedback from "@/models/Feedback";
 import SiteSetting from "@/models/SiteSetting";
 import AdminBookingActions from "@/components/AdminBookingActions";
-import { HeroImageForm, SiteSettingsForm, CreateRoomForm, AdminPromotionForm } from "@/components/AdminForms";
+import { HeroImageForm, SiteSettingsForm, CreateRoomForm, AdminPromotionForm, RoomManagementActions } from "@/components/AdminForms";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 
@@ -44,13 +44,26 @@ export default async function AdminDashboard() {
   };
 
   return (
-    <div className="container py-8 md:py-16 max-w-7xl">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-12 border-b border-outline-ghost pb-6">
-        <h1 className="text-2xl md:text-4xl text-text-main font-headline uppercase tracking-widest">Admin Dashboard</h1>
-        <Link href="/" className="btn btn-outline text-xs px-4 py-2">Back to Site</Link>
-      </div>
+    <>
+      <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
+        <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
+          DJACE
+        </Link>
+        <div className="flex items-center gap-4 md:gap-6">
+          <span className="text-white/70 text-xs hidden sm:inline font-body">Admin Panel</span>
+          <Link href="/" className="text-accent-gold text-[11px] md:text-sm tracking-widest uppercase hover:text-white transition-colors">
+            Exit
+          </Link>
+          <LogoutButton />
+        </div>
+      </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="container py-8 md:py-16 max-w-7xl">
+        <div className="flex flex-col sm:row justify-between items-start sm:items-center gap-4 mb-12 border-b border-outline-ghost pb-6">
+          <h1 className="text-3xl md:text-4xl text-text-main font-headline uppercase tracking-widest">Admin Dashboard</h1>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
         
         {/* Settings Column */}
         <div>
@@ -91,6 +104,7 @@ export default async function AdminDashboard() {
               <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Price</th>
               <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Capacity</th>
               <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Status</th>
+              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -103,6 +117,9 @@ export default async function AdminDashboard() {
                   <span className={`px-2 py-1 text-xs rounded uppercase tracking-widest ${room.isAvailable ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                     {room.isAvailable ? "Available" : "Hidden"}
                   </span>
+                </td>
+                <td className="p-4">
+                  <RoomManagementActions room={JSON.parse(JSON.stringify(room))} />
                 </td>
               </tr>
             ))}

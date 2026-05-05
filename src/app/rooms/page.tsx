@@ -16,30 +16,30 @@ export default async function RoomsPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <nav className="bg-black/90 sticky top-0 w-full z-50 px-4 md:px-8 py-6 flex justify-between items-center border-b border-white/10 backdrop-blur-md">
-        <Link href="/" className="text-white font-headline text-2xl md:text-3xl tracking-widest uppercase">
+      <nav className="bg-black/90 sticky top-0 w-full z-50 px-4 md:px-8 py-4 md:py-6 flex justify-between items-center border-b border-white/10 backdrop-blur-md">
+        <Link href="/" className="text-white font-headline text-xl md:text-3xl tracking-widest uppercase">
           DJACE
         </Link>
-        <div className="flex gap-4 md:gap-8 items-center">
-          <Link href="/rooms" className="text-accent-gold font-body text-[10px] md:text-sm tracking-widest uppercase">
+        <div className="flex gap-3 md:gap-8 items-center">
+          <Link href="/rooms" className="text-accent-gold font-body text-[11px] md:text-sm tracking-widest uppercase">
             Rooms
           </Link>
-          <Link href="/feedback" className="hidden md:inline text-white font-body text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+          <Link href="/feedback" className="hidden sm:inline text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
             Feedback
           </Link>
           {session?.user?.email ? (
-            <div className="flex gap-4 md:gap-8 items-center">
-              <Link href="/dashboard" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+            <div className="flex gap-3 md:gap-8 items-center">
+              <Link href="/dashboard" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
                 Dashboard
               </Link>
               <LogoutButton />
             </div>
           ) : (
-            <div className="flex gap-4 md:gap-8 items-center">
-              <Link href="/login" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
+            <div className="flex gap-3 md:gap-8 items-center">
+              <Link href="/login" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
                 Login
               </Link>
-              <Link href="/register" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors border border-white/20 px-4 py-2 rounded hover:bg-white hover:text-black">
+              <Link href="/register" className="text-white font-body text-[11px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors border border-white/20 px-3 md:px-4 py-1.5 md:py-2 rounded hover:bg-white hover:text-black">
                 Register
               </Link>
             </div>

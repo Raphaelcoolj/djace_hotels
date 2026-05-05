@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateHeroImage, createRoom, updateSiteSettings, promoteToAdmin } from "@/lib/adminActions";
+import { updateHeroImage, createRoom, updateSiteSettings, promoteToAdmin, deleteRoom, toggleRoomAvailability, updateRoom } from "@/lib/adminActions";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
@@ -182,3 +182,136 @@ export function AdminPromotionForm() {
     </form>
   );
 }
+
+export function RoomManagementActions({ room }: { room: any }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const roomId = room._id.toString();
+  const isAvailable = room.isAvailable;
+
+  async function handleToggle() {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("roomId", roomId);
+    formData.append("isAvailable", isAvailable ? "true" : "false");
+    
+    try {
+      const res = await toggleRoomAvailability(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success(`Room is now ${!isAvailable ? 'Visible' : 'Hidden'}`);
+        router.refresh();
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this room? This cannot be undone.")) return;
+    
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("roomId", roomId);
+    
+    try {
+      const res = await deleteRoom(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Room deleted successfully");
+        router.refresh();
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-2">
+        <button 
+          onClick={() => setIsEditing(!isEditing)}
+          className="px-3 py-1 text-[10px] bg-blue-900/20 text-blue-400 border border-blue-900/30 rounded uppercase tracking-tighter"
+        >
+          {isEditing ? "Cancel" : "Edit"}
+        </button>
+        <button 
+          onClick={handleToggle}
+          disabled={loading}
+          className={`px-3 py-1 text-[10px] rounded uppercase tracking-tighter transition-colors ${
+            isAvailable ? 'bg-orange-900/20 text-orange-400 border border-orange-900/30' : 'bg-green-900/20 text-green-400 border border-green-900/30'
+          }`}
+        >
+          {isAvailable ? "Hide" : "Show"}
+        </button>
+        <button 
+          onClick={handleDelete}
+          disabled={loading}
+          className="px-3 py-1 text-[10px] bg-red-900/20 text-red-400 border border-red-900/30 rounded uppercase tracking-tighter hover:bg-red-900/40"
+        >
+          Delete
+        </button>
+      </div>
+
+      {isEditing && (
+        <div className="bg-surface-dim p-4 border border-outline-ghost rounded mt-2 text-left min-w-[300px]">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-text-main mb-4">Edit Room: {room.name}</h4>
+          <EditRoomForm room={room} onSuccess={() => setIsEditing(false)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function EditRoomForm({ room, onSuccess }: { room: any, onSuccess: () => void }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    formData.append("roomId", room._id.toString());
+    try {
+      const res = await updateRoom(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Room updated successfully!");
+        router.refresh();
+        onSuccess();
+      }
+    } catch (e) {
+      toast.error("Failed to update room.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form action={handleSubmit} className="flex flex-col gap-3">
+      <div className="input-group mb-0">
+        <label className="text-[10px] uppercase tracking-widest text-text-muted mb-1 block">Room Name</label>
+        <input type="text" name="name" className="input-field py-1 text-sm" defaultValue={room.name} required />
+      </div>
+      <div className="input-group mb-0">
+        <label className="text-[10px] uppercase tracking-widest text-text-muted mb-1 block">Description</label>
+        <textarea name="description" className="input-field py-1 text-sm" rows={2} defaultValue={room.description} required></textarea>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <label className="text-[10px] uppercase tracking-widest text-text-muted mb-1 block">Price (₦)</label>
+          <input type="number" name="pricePerNight" className="input-field py-1 text-sm" defaultValue={room.pricePerNight} required />
+        </div>
+        <div className="flex-1">
+          <label className="text-[10px] uppercase tracking-widest text-text-muted mb-1 block">Capacity</label>
+          <input type="number" name="capacity" className="input-field py-1 text-sm" defaultValue={room.capacity} required />
+        </div>
+      </div>
+      <button type="submit" className="btn btn-gold py-2 text-xs" disabled={loading}>
+        {loading ? "Updating..." : "Update Details"}
+      </button>
+    </form>
+  );
+}
+
+
