@@ -26,7 +26,7 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-background flex flex-col">
       <nav className="p-4 md:p-8 bg-primary border-b border-white/10">
         <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          DJACE
+          LUXURY
         </Link>
       </nav>
 
@@ -34,7 +34,7 @@ export default function RegisterPage() {
         <div className="card w-full max-w-md p-8 md:p-12">
           <div className="text-center mb-10">
             <h2 className="text-3xl text-text-main font-headline tracking-widest uppercase mb-2">Create Account</h2>
-            <p className="text-text-muted text-sm">Join Djace Hotels & Lounge</p>
+            <p className="text-text-muted text-sm">Join Luxury Hotel & Lounge</p>
           </div>
 
           {error && (

@@ -48,7 +48,7 @@ export default async function AdminDashboard() {
     <>
       <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
         <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          DJACE
+          LUXURY
         </Link>
         <div className="flex items-center gap-4 md:gap-6">
           <span className="text-white/70 text-xs hidden sm:inline font-body">Admin Panel</span>

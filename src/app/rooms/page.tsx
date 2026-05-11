@@ -18,7 +18,7 @@ export default async function RoomsPage() {
     <main className="min-h-screen bg-background">
       <nav className="bg-black/95 sticky top-0 w-full z-50 px-6 md:px-8 py-5 md:py-6 flex justify-between items-center border-b border-white/10 backdrop-blur-md">
         <Link href="/" className="text-white font-headline text-lg md:text-3xl tracking-[0.2em] uppercase">
-          DJACE
+          LUXURY
         </Link>
         <div className="flex gap-4 md:gap-8 items-center">
           <Link href="/rooms" className="text-accent-gold font-body text-[10px] md:text-sm tracking-widest uppercase">
@@ -95,12 +95,12 @@ export default async function RoomsPage() {
       </div>
 
       <footer className="bg-surface-dim border-t border-outline-ghost py-16 text-center mt-16">
-        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Djace Hotels</h2>
+        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Luxury Hotel</h2>
         <div className="flex flex-col md:flex-row justify-center gap-8 mb-8 text-text-muted text-sm">
           <p>Contact: {phoneSetting?.value || "+1 (555) 123-4567"}</p>
-          <p>Email: {emailSetting?.value || "reservations@djacehotels.com"}</p>
+          <p>Email: {emailSetting?.value || "reservations@luxuryhotel.com"}</p>
         </div>
-        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Djace Hotels & Lounge. All rights reserved.</p>
+        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Luxury Hotel & Lounge. All rights reserved.</p>
       </footer>
     </main>
   );

@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-background">
       <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
         <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          DJACE
+          LUXURY
         </Link>
         <div className="flex items-center gap-3 md:gap-6">
           <span className="text-white/70 text-[10px] sm:text-xs hidden sm:inline font-body">Welcome, {session.user.name}</span>
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
                         Paid
                       </span>
                       <a 
-                        href={`https://wa.me/?text=${encodeURIComponent(`Hello, I've just paid for my booking at Djace Hotels.\n\nBooking ID: ${booking._id}\nReference: ${booking.paymentReference}\nRoom: ${booking.room?.name}`)}`}
+                        href={`https://wa.me/?text=${encodeURIComponent(`Hello, I've just paid for my booking at Luxury Hotel.\n\nBooking ID: ${booking._id}\nReference: ${booking.paymentReference}\nRoom: ${booking.room?.name}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[10px] text-center text-text-muted hover:text-accent-gold transition-colors underline"
@@ -112,12 +112,12 @@ export default async function DashboardPage() {
       </div>
 
       <footer className="bg-surface-dim border-t border-outline-ghost py-16 text-center mt-16">
-        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Djace Hotels</h2>
+        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Luxury Hotel</h2>
         <div className="flex flex-col md:flex-row justify-center gap-8 mb-8 text-text-muted text-sm">
           <p>Contact: {phoneSetting?.value || "+1 (555) 123-4567"}</p>
-          <p>Email: {emailSetting?.value || "reservations@djacehotels.com"}</p>
+          <p>Email: {emailSetting?.value || "reservations@luxuryhotel.com"}</p>
         </div>
-        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Djace Hotels & Lounge. All rights reserved.</p>
+        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Luxury Hotel & Lounge. All rights reserved.</p>
       </footer>
     </main>
   );

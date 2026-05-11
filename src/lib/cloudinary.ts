@@ -12,7 +12,7 @@ export async function uploadImage(file: File): Promise<string> {
 
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
-      { folder: "djace_hotels" },
+      { folder: "luxury_hotels" },
       (error, result) => {
         if (error) {
           reject(error);

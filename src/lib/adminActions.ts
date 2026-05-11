@@ -115,16 +115,16 @@ export async function updateBookingStatus(formData: FormData) {
       // Send email notification to user
       try {
         const { sendEmail } = await import("./email");
-        let subject = "Booking Update - Djace Hotels";
+        let subject = "Booking Update - Luxury Hotel";
         let html = "";
 
         if (status === "approved_awaiting_payment") {
-          subject = "Booking Approved! - Djace Hotels";
+          subject = "Booking Approved! - Luxury Hotel";
           html = `<p>Hi ${booking.user.name},</p>
                   <p>Your booking for the room has been approved!</p>
                   <p>Please log in to your dashboard to complete the payment and confirm your stay.</p>`;
         } else if (status === "declined") {
-          subject = "Booking Declined - Djace Hotels";
+          subject = "Booking Declined - Luxury Hotel";
           html = `<p>Hi ${booking.user.name},</p>
                   <p>We're sorry, but your booking request has been declined.</p>
                   <p>Please contact us if you have any questions.</p>`;

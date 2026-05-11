@@ -32,7 +32,7 @@ export default function FeedbackPage() {
     <main className="min-h-screen bg-background">
       <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
         <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          DJACE
+          LUXURY
         </Link>
         <Link href="/" className="text-white/70 text-[10px] md:text-sm uppercase tracking-widest hover:text-accent-gold transition-colors font-body">
           Back to Home

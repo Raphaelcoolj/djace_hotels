@@ -112,7 +112,7 @@ export async function createBooking(formData: FormData) {
       if (adminEmail) {
         await sendEmail({
           to: adminEmail,
-          subject: "New Booking Received - Djace Hotels",
+          subject: "New Booking Received - Luxury Hotel",
           html: `<p>A new booking has been made by ${session.user.name} (${session.user.email}).</p>
                  <p>Room: ${room.name}</p>
                  <p>Dates: ${inDate.toLocaleDateString()} to ${outDate.toLocaleDateString()}</p>`,

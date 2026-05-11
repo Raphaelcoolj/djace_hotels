@@ -12,7 +12,7 @@ const notoSerif = Noto_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Djace Hotels & Lounge",
+  title: "Luxury Hotel & Lounge",
   description: "Experience unparalleled luxury and breathtaking views.",
 };
 

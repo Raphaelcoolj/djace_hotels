@@ -26,7 +26,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-background flex flex-col">
       <nav className="p-4 md:p-8 bg-primary border-b border-white/10">
         <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          DJACE
+          LUXURY
         </Link>
       </nav>
 

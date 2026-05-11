@@ -33,7 +33,7 @@ export async function processPayment(formData: FormData) {
       
       await sendEmail({
         to: user.email,
-        subject: "Payment Confirmed - Djace Hotels",
+        subject: "Payment Confirmed - Luxury Hotel",
         html: `<p>Hello ${user.name},</p>
                <p>Your payment of ₦${formatPrice(booking.totalPrice)} has been confirmed for your stay at ${room.name}.</p>
                <p>We look forward to hosting you!</p>`,

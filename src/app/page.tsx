@@ -22,7 +22,7 @@ export default async function Home() {
       {/* Navigation */}
       <nav className="absolute top-0 w-full z-50 px-6 md:px-8 py-5 md:py-6 flex justify-between items-center bg-black/40 backdrop-blur-md border-b border-white/10">
         <Link href="/" className="text-white font-headline text-lg md:text-3xl tracking-[0.2em] uppercase">
-          DJACE
+          LUXURY
         </Link>
         <div className="flex gap-4 md:gap-8 items-center">
           <Link href="/rooms" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
@@ -59,7 +59,7 @@ export default async function Home() {
         
         <div className="max-w-4xl mx-auto">
           <h1 className="font-headline text-2xl sm:text-5xl md:text-6xl text-white mb-6 uppercase tracking-[0.1em] md:tracking-[0.2em] drop-shadow-2xl font-bold leading-tight">
-            Djace Hotels <br className="sm:hidden" /> & Lounge
+            Luxury Hotel <br className="sm:hidden" /> & Lounge
           </h1>
           <p className="font-body text-sm md:text-xl text-white/80 mb-12 max-w-2xl mx-auto tracking-wide font-light italic leading-relaxed">
             Where refined elegance meets timeless comfort—your exclusive retreat for unforgettable moments.
@@ -127,12 +127,12 @@ export default async function Home() {
 
       {/* Footer */}
       <footer className="bg-surface-dim border-t border-outline-ghost py-16 text-center">
-        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Djace Hotels</h2>
+        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Luxury Hotel</h2>
         <div className="flex flex-col md:flex-row justify-center gap-8 mb-8 text-text-muted text-sm">
           <p>Contact: {phoneSetting?.value || "+1 (555) 123-4567"}</p>
-          <p>Email: {emailSetting?.value || "reservations@djacehotels.com"}</p>
+          <p>Email: {emailSetting?.value || "reservations@luxuryhotel.com"}</p>
         </div>
-        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Djace Hotels & Lounge. All rights reserved.</p>
+        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Luxury Hotel & Lounge. All rights reserved.</p>
       </footer>
     </main>
   );

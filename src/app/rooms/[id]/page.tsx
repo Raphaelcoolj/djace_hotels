@@ -28,7 +28,7 @@ export default async function RoomDetailsPage({ params }: { params: Promise<{ id
     <main className="min-h-screen bg-background">
       <nav className="bg-black/95 sticky top-0 w-full z-50 px-6 md:px-8 py-5 md:py-6 flex justify-between items-center border-b border-white/10 backdrop-blur-md">
         <Link href="/" className="text-white font-headline text-lg md:text-3xl tracking-[0.2em] uppercase">
-          DJACE
+          LUXURY
         </Link>
         <div className="flex gap-4 md:gap-8 items-center">
           <Link href="/rooms" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
