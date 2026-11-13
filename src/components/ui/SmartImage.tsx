@@ -32,9 +32,19 @@ export default function SmartImage({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const showImage = Boolean(src) && !failed;
+  // Tailwind emits `.relative` after `.absolute`, so a hardcoded `relative`
+  // would beat a caller's `absolute` and collapse the fill wrapper. Only apply
+  // the default position when the caller hasn't specified one.
+  const hasOwnPosition = /\b(absolute|fixed|sticky|static|relative)\b/.test(
+    className
+  );
 
   return (
-    <div className={`relative overflow-hidden bg-cream ${className}`}>
+    <div
+      className={`overflow-hidden bg-cream ${
+        hasOwnPosition ? "" : "relative"
+      } ${className}`}
+    >
       {showImage ? (
         <Image
           src={src as string}
