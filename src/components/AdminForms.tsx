@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   updateHeroImage,
+  removeHeroImage,
   createRoom,
   updateSiteSettings,
   promoteToAdmin,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/adminActions";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import SmartImage from "@/components/ui/SmartImage";
 
 type AdminRoom = {
   _id: string;
@@ -25,12 +27,17 @@ type AdminRoom = {
   isAvailable: boolean;
 };
 
-export function HeroImageForm() {
+export function HeroImageForm({
+  currentImageUrl,
+}: {
+  currentImageUrl?: string | null;
+}) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
+  async function handleUpload(formData: FormData) {
+    setUploading(true);
     try {
       const res = await updateHeroImage(formData);
       if (res?.error) toast.error(res.error);
@@ -41,33 +48,103 @@ export function HeroImageForm() {
     } catch {
       toast.error("Failed to upload image.");
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   }
 
+  async function handleRemove() {
+    if (
+      !window.confirm(
+        "Remove the custom hero image? The homepage will revert to the default image."
+      )
+    ) {
+      return;
+    }
+    setRemoving(true);
+    try {
+      const res = await removeHeroImage();
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Hero image removed. Default image restored.");
+        router.refresh();
+      }
+    } catch {
+      toast.error("Failed to remove image.");
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  const busy = uploading || removing;
+
   return (
-    <form action={handleSubmit} className="border-b border-line pb-8">
+    <div className="border-b border-line pb-8">
       <h3 className="font-heading text-lg text-charcoal">Hero image</h3>
       <p className="mt-1.5 font-body text-xs leading-relaxed text-warmgrey">
-        Displayed full-screen at the top of the homepage.
+        Background of the homepage hero — “Where refined elegance meets timeless
+        comfort”. Shown full-screen and responsive on every device.
       </p>
-      <div className="input-group mt-5 mb-4">
-        <label className="input-label" htmlFor="hero-image">
-          Photograph
-        </label>
-        <input
-          id="hero-image"
-          type="file"
-          name="heroImage"
-          className="input-field"
-          accept="image/*"
-          required
-        />
+
+      <div className="mt-5 mb-4">
+        <p className="input-label" id="hero-image-current-label">
+          Current background
+        </p>
+        {currentImageUrl ? (
+          <div className="relative mt-2 overflow-hidden rounded-sm border border-line">
+            <SmartImage
+              src={currentImageUrl}
+              alt="Current hero background image"
+              className="aspect-[16/9] w-full"
+              sizes="(max-width: 1024px) 100vw, 33vw"
+            />
+          </div>
+        ) : (
+          <p
+            className="mt-2 rounded-sm border border-dashed border-line bg-cream/60 px-3 py-4 font-body text-xs leading-relaxed text-warmgrey"
+            role="status"
+          >
+            No custom image — the default hero image is in use.
+          </p>
+        )}
       </div>
-      <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-        {loading ? "Uploading…" : "Upload hero image"}
-      </button>
-    </form>
+
+      <form action={handleUpload}>
+        <div className="input-group mb-4">
+          <label className="input-label" htmlFor="hero-image">
+            Upload a new photograph
+          </label>
+          <input
+            id="hero-image"
+            type="file"
+            name="heroImage"
+            className="input-field"
+            accept="image/*"
+            required
+            disabled={busy}
+          />
+        </div>
+        <button
+          type="submit"
+          className="btn btn-primary btn-block"
+          disabled={busy}
+          aria-busy={uploading}
+        >
+          {uploading ? "Uploading…" : "Upload hero image"}
+        </button>
+      </form>
+
+      {currentImageUrl && (
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="mt-3 w-full cursor-pointer border border-danger/40 px-8 py-4 font-body text-[11px] md:text-xs font-medium uppercase tracking-[0.2em] text-danger transition-all duration-300 ease-luxe hover:border-danger hover:bg-danger/10 disabled:pointer-events-none disabled:opacity-50"
+          disabled={busy}
+          aria-busy={removing}
+        >
+          {removing ? "Removing…" : "Remove custom image"}
+        </button>
+      )}
+    </div>
   );
 }
 

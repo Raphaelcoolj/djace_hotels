@@ -57,6 +57,7 @@ export default async function AdminDashboard() {
     billingAddressSetting,
     socialInstagramSetting,
     socialFacebookSetting,
+    heroImageSetting,
   ] = await Promise.all([
     Room.find().sort({ createdAt: -1 }),
     Booking.find().populate("room user").sort({ createdAt: -1 }).limit(30),
@@ -78,6 +79,7 @@ export default async function AdminDashboard() {
     SiteSetting.findOne({ key: "billing_address" }),
     SiteSetting.findOne({ key: "social_instagram" }),
     SiteSetting.findOne({ key: "social_facebook" }),
+    SiteSetting.findOne({ key: "hero_image" }),
   ]);
 
   const stats: AdminStat[] = [
@@ -422,7 +424,7 @@ export default async function AdminDashboard() {
                   Site settings
                 </h2>
                 <div className="mt-5">
-                  <HeroImageForm />
+                  <HeroImageForm currentImageUrl={heroImageSetting?.value || null} />
                   <div className="pt-6">
                     <SiteSettingsForm settings={currentSettings} />
                   </div>

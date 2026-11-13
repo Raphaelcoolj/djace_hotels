@@ -3,7 +3,7 @@
 import connectDB from "./db";
 import SiteSetting from "@/models/SiteSetting";
 import { revalidatePath } from "next/cache";
-import { uploadImage } from "./cloudinary";
+import { uploadImage, deleteImage } from "./cloudinary";
 import User from "@/models/User";
 
 export async function updateHeroImage(formData: FormData) {
@@ -13,16 +13,35 @@ export async function updateHeroImage(formData: FormData) {
   try {
     const imageUrl = await uploadImage(file);
     await connectDB();
-    await SiteSetting.findOneAndUpdate(
+    const previous = await SiteSetting.findOneAndUpdate(
       { key: "hero_image" },
       { value: imageUrl },
       { upsert: true }
     );
+    // Clean up the replaced asset (best-effort).
+    if (previous?.value && previous.value !== imageUrl) {
+      await deleteImage(previous.value);
+    }
     revalidatePath("/admin");
     revalidatePath("/");
     return { success: true };
   } catch {
     return { error: "Failed to update hero image" };
+  }
+}
+
+export async function removeHeroImage() {
+  try {
+    await connectDB();
+    const setting = await SiteSetting.findOneAndDelete({ key: "hero_image" });
+    if (setting?.value) {
+      await deleteImage(setting.value);
+    }
+    revalidatePath("/admin");
+    revalidatePath("/");
+    return { success: true };
+  } catch {
+    return { error: "Failed to remove hero image" };
   }
 }
 
