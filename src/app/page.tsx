@@ -14,6 +14,10 @@ import CtaSection from "@/components/home/CtaSection";
 const FALLBACK_HERO =
   "https://images.unsplash.com/photo-1542314831-c6a4d1409e1c?q=80&w=2000&auto=format&fit=crop";
 
+// The homepage renders live data (rooms, settings, session) on every request;
+// it must never execute against the database during the static build.
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   await connectDB();
   const [rooms, heroSetting, phoneSetting] = await Promise.all([
