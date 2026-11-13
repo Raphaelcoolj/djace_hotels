@@ -1,22 +1,39 @@
-import connectDB from "@/lib/db";
-import Room from "@/models/Room";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import BookingForm from "./BookingForm";
+import connectDB from "@/lib/db";
+import Room from "@/models/Room";
+import { auth } from "../../../../auth";
+import SiteHeader from "@/components/navigation/SiteHeader";
+import SiteFooter from "@/components/navigation/SiteFooter";
+import RoomGallery from "@/components/rooms/RoomGallery";
+import RoomCard from "@/components/rooms/RoomCard";
+import BookingForm from "@/components/booking/BookingForm";
+import Reveal from "@/components/ui/Reveal";
 import { formatPrice } from "@/lib/format";
 
-import { auth } from "../../../../auth";
-import LogoutButton from "@/components/LogoutButton";
+type RoomDetailPageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default async function RoomDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+function first(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+export default async function RoomDetailsPage({
+  params,
+  searchParams,
+}: RoomDetailPageProps) {
   await connectDB();
   const { id } = await params;
+  const sp = await searchParams;
   const session = await auth();
-  
+
   let room;
   try {
     room = await Room.findById(id);
-  } catch (e) {
+  } catch {
     notFound();
   }
 
@@ -24,88 +41,166 @@ export default async function RoomDetailsPage({ params }: { params: Promise<{ id
     notFound();
   }
 
+  const related = await Room.find({
+    isAvailable: true,
+    _id: { $ne: room._id },
+  })
+    .limit(3)
+    .sort({ pricePerNight: -1 });
+
+  const amenities: string[] = (room.amenities ?? []).filter(Boolean);
+  const initialCheckIn = first(sp.checkIn);
+  const initialCheckOut = first(sp.checkOut);
+
   return (
-    <main className="min-h-screen bg-background">
-      <nav className="bg-black/95 sticky top-0 w-full z-50 px-6 md:px-8 py-5 md:py-6 flex justify-between items-center border-b border-white/10 backdrop-blur-md">
-        <Link href="/" className="text-white font-headline text-lg md:text-3xl tracking-[0.2em] uppercase">
-          LUXURY
-        </Link>
-        <div className="flex gap-4 md:gap-8 items-center">
-          <Link href="/rooms" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
-            Rooms
-          </Link>
-          {session?.user?.email ? (
-            <div className="flex gap-4 md:gap-8 items-center">
-              <Link href="/dashboard" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
-                Dashboard
-              </Link>
-              <LogoutButton />
+    <>
+      <SiteHeader variant="solid" />
+      <main className="pb-28 lg:pb-0">
+        <div className="container pt-8 md:pt-12">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 font-body text-[11px] uppercase tracking-[0.2em] text-warmgrey">
+              <li>
+                <Link href="/rooms" className="transition-colors hover:text-gold">
+                  Rooms
+                </Link>
+              </li>
+              <li aria-hidden className="text-warmgrey/50">
+                /
+              </li>
+              <li className="text-charcoal" aria-current="page">
+                {room.name}
+              </li>
+            </ol>
+          </nav>
+
+          {/* Gallery */}
+          <RoomGallery images={room.images ?? []} alt={room.name} />
+
+          {/* Title block */}
+          <div className="mt-10 flex flex-col gap-6 border-b border-line pb-8 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="overline">{room.roomClass || "Standard"}</p>
+              <h1 className="heading-xl mt-4 text-charcoal">{room.name}</h1>
+              <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3 font-body text-sm text-warmgrey">
+                <span>
+                  {room.capacity} {room.capacity === 1 ? "Guest" : "Guests"}
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-forest" aria-hidden />
+                  Currently accepting reservations
+                </span>
+              </div>
             </div>
-          ) : (
-            <div className="flex gap-4 md:gap-8 items-center">
-              <Link href="/login" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors">
-                Login
-              </Link>
-              <Link href="/register" className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase border border-white/20 px-3 py-2 rounded hover:bg-white hover:text-black transition-all">
-                Register
-              </Link>
+            <p className="shrink-0 font-heading text-3xl text-charcoal md:text-4xl">
+              ₦{formatPrice(room.pricePerNight)}
+              <span className="font-body text-sm font-light text-warmgrey"> / night</span>
+            </p>
+          </div>
+
+          {/* Details + booking */}
+          <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+            <div className="lg:col-span-7">
+              <h2 className="overline-muted">About this room</h2>
+              <p className="mt-5 max-w-2xl font-body text-base md:text-[17px] font-light leading-relaxed text-charcoal/80">
+                {room.description}
+              </p>
+
+              {amenities.length > 0 && (
+                <div className="mt-12">
+                  <h2 className="overline-muted">Amenities</h2>
+                  <ul className="mt-6 grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-2">
+                    {amenities.map((amenity) => (
+                      <li
+                        key={amenity}
+                        className="flex items-center gap-4 border-b border-line-soft pb-4 font-body text-sm text-charcoal"
+                      >
+                        <span className="h-px w-5 shrink-0 bg-gold" aria-hidden />
+                        {amenity}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-12 border border-line bg-cream/60 p-6">
+                <h2 className="font-heading text-xl text-charcoal">
+                  How reservations work
+                </h2>
+                <ol className="mt-4 flex flex-col gap-3 font-body text-sm leading-relaxed text-warmgrey">
+                  <li>
+                    <span className="text-gold">01</span> — Request your dates and
+                    we confirm availability personally.
+                  </li>
+                  <li>
+                    <span className="text-gold">02</span> — Receive payment
+                    instructions once approved.
+                  </li>
+                  <li>
+                    <span className="text-gold">03</span> — Submit your payment
+                    reference and your stay is confirmed.
+                  </li>
+                </ol>
+              </div>
             </div>
+
+            <div className="lg:col-span-5 lg:col-start-8">
+              <div className="lg:sticky lg:top-28">
+                <BookingForm
+                  roomId={room._id.toString()}
+                  pricePerNight={room.pricePerNight}
+                  isAuthenticated={Boolean(session?.user?.id)}
+                  initialCheckIn={initialCheckIn}
+                  initialCheckOut={initialCheckOut}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Related rooms */}
+          {related.length > 0 && (
+            <section className="mt-20 border-t border-line pt-16">
+              <div className="flex items-end justify-between gap-6">
+                <h2 className="heading-lg text-charcoal">
+                  You may also consider
+                </h2>
+                <Link
+                  href="/rooms"
+                  className="link-underline shrink-0 text-charcoal hover:text-gold"
+                >
+                  All rooms
+                </Link>
+              </div>
+              <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3">
+                {related.map((other, i) => (
+                  <Reveal key={other._id.toString()} delay={((i + 1) as 1 | 2 | 3)}>
+                    <RoomCard room={other} />
+                  </Reveal>
+                ))}
+              </div>
+            </section>
           )}
         </div>
-      </nav>
+      </main>
 
-      <div className="container py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-          
-          {/* Room Details Column */}
-          <div>
-            <div className="w-full h-96 bg-surface mb-8 overflow-hidden rounded-lg shadow-xl relative">
-              {room.images && room.images.length > 0 ? (
-                <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-text-muted">No Image Available</div>
-              )}
-            </div>
-            
-            <h1 className="text-4xl text-white font-headline tracking-widest uppercase mb-2">{room.name}</h1>
-            <div className="text-sm text-accent-gold uppercase tracking-widest mb-6 font-semibold">{room.roomClass || "Standard"}</div>
-            
-            <p className="text-text-muted text-lg mb-8 leading-relaxed">
-              {room.description}
-            </p>
-            
-            <div className="grid grid-cols-2 gap-8 mb-8 border-t border-outline-ghost pt-8">
-              <div>
-                <h3 className="text-xs uppercase text-text-muted tracking-widest mb-2 font-semibold">Price</h3>
-                <p className="text-2xl text-accent-gold font-headline">₦{formatPrice(room.pricePerNight)}<span className="text-sm text-text-muted font-body font-normal"> / night</span></p>
-              </div>
-              <div>
-                <h3 className="text-xs uppercase text-text-muted tracking-widest mb-2 font-semibold">Capacity</h3>
-                <p className="text-xl text-white font-body">{room.capacity} Persons</p>
-              </div>
-            </div>
-            
-            {room.amenities && room.amenities.length > 0 && (
-              <div className="border-t border-outline-ghost pt-8">
-                <h3 className="text-xs uppercase text-text-muted tracking-widest mb-4 font-semibold">Amenities</h3>
-                <ul className="flex flex-wrap gap-4">
-                  {room.amenities.map((amenity: string, i: number) => (
-                    <li key={i} className="bg-surface border border-outline-ghost px-4 py-2 text-sm text-text-muted rounded">
-                      {amenity}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-          
-          {/* Booking Form Column */}
-          <div>
-            <BookingForm roomId={room._id.toString()} pricePerNight={room.pricePerNight} />
-          </div>
-          
+      {/* Mobile reservation bar */}
+      <div
+        aria-label="Reservation shortcut"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ivory/95 backdrop-blur-md lg:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-center justify-between gap-4 px-5 pt-3">
+          <p className="font-heading text-lg leading-none text-charcoal">
+            ₦{formatPrice(room.pricePerNight)}
+            <span className="font-body text-xs font-light text-warmgrey"> / night</span>
+          </p>
+          <a href="#booking" className="btn btn-gold btn-sm">
+            Reserve
+          </a>
         </div>
       </div>
-    </main>
+
+      <SiteFooter />
+    </>
   );
 }

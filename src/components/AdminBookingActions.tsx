@@ -16,22 +16,22 @@ export default function AdminBookingActions({ bookingId }: { bookingId: string }
       await updateBookingStatus(formData);
       toast.success(`Booking ${status.replace(/_/g, ' ')} successfully!`);
       router.refresh();
-    } catch (e) {
+    } catch {
       toast.error("Failed to update booking status.");
     }
   }
 
   return (
     <div className="flex gap-2">
-      <button 
+      <button
         onClick={() => handleStatusUpdate("approved_awaiting_payment")}
-        className="bg-accent-gold text-primary hover:bg-accent-gold-hover px-3 py-1 text-xs font-semibold uppercase rounded transition-colors cursor-pointer"
+        className="border border-gold bg-gold px-3.5 py-1.5 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-charcoal transition-colors duration-300 hover:bg-gold/85 cursor-pointer"
       >
         Approve
       </button>
-      <button 
+      <button
         onClick={() => handleStatusUpdate("declined")}
-        className="bg-transparent border border-text-muted text-text-muted hover:bg-surface-dim px-3 py-1 text-xs font-semibold uppercase rounded transition-colors cursor-pointer"
+        className="border border-line px-3.5 py-1.5 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-warmgrey transition-colors duration-300 hover:border-danger hover:text-danger cursor-pointer"
       >
         Decline
       </button>

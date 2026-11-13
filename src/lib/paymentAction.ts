@@ -26,8 +26,8 @@ export async function processPayment(formData: FormData) {
     // Send payment confirmation email to user
     try {
       const { sendEmail } = await import("./email");
-      const user = booking.user as any;
-      const room = booking.room as any;
+      const user = booking.user as unknown as { name: string; email: string };
+      const room = booking.room as unknown as { name: string };
       
       const { formatPrice } = await import("./format");
       
@@ -44,7 +44,7 @@ export async function processPayment(formData: FormData) {
 
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (e) {
+  } catch {
     return { error: "Failed to process payment" };
   }
 }

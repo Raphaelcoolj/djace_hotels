@@ -34,7 +34,7 @@ export async function register(formData: FormData) {
 
     await newUser.save();
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "An error occurred during registration." };
   }
 }
@@ -124,7 +124,7 @@ export async function createBooking(formData: FormData) {
 
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "An error occurred while booking" };
   }
 }
@@ -154,7 +154,7 @@ export async function submitFeedback(formData: FormData) {
 
     await newFeedback.save();
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to submit feedback." };
   }
 }

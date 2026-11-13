@@ -21,7 +21,7 @@ export async function updateHeroImage(formData: FormData) {
     revalidatePath("/admin");
     revalidatePath("/");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update hero image" };
   }
 }
@@ -32,6 +32,7 @@ export async function createRoom(formData: FormData) {
   const pricePerNight = Number(formData.get("pricePerNight"));
   const capacity = Number(formData.get("capacity"));
   const roomClass = formData.get("roomClass") as string;
+  const amenitiesRaw = formData.get("amenities") as string | null;
   const imageFile = formData.get("image") as File;
 
   if (!name || !description || !pricePerNight) {
@@ -44,6 +45,13 @@ export async function createRoom(formData: FormData) {
       imageUrl = await uploadImage(imageFile);
     }
 
+    const amenities = amenitiesRaw
+      ? amenitiesRaw
+          .split(",")
+          .map((a) => a.trim())
+          .filter(Boolean)
+      : [];
+
     await connectDB();
     const Room = await import("@/models/Room").then(m => m.default);
     const newRoom = new Room({
@@ -52,13 +60,14 @@ export async function createRoom(formData: FormData) {
       pricePerNight,
       capacity,
       roomClass,
+      amenities,
       images: imageUrl ? [imageUrl] : [],
     });
     await newRoom.save();
     revalidatePath("/admin");
     revalidatePath("/rooms");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to create room" };
   }
 }
@@ -71,6 +80,8 @@ export async function updateSiteSettings(formData: FormData) {
   const accountNumber = formData.get("accountNumber") as string;
   const accountName = formData.get("accountName") as string;
   const billingAddress = formData.get("billingAddress") as string;
+  const socialInstagram = formData.get("socialInstagram") as string;
+  const socialFacebook = formData.get("socialFacebook") as string;
 
   try {
     await connectDB();
@@ -81,7 +92,9 @@ export async function updateSiteSettings(formData: FormData) {
       { key: "bank_name", value: bankName },
       { key: "account_number", value: accountNumber },
       { key: "account_name", value: accountName },
-      { key: "billing_address", value: billingAddress },
+        { key: "billing_address", value: billingAddress },
+        { key: "social_instagram", value: socialInstagram },
+        { key: "social_facebook", value: socialFacebook },
     ];
 
     for (const setting of settings) {
@@ -97,7 +110,7 @@ export async function updateSiteSettings(formData: FormData) {
     revalidatePath("/admin");
     revalidatePath("/");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update settings" };
   }
 }
@@ -145,7 +158,7 @@ export async function updateBookingStatus(formData: FormData) {
     revalidatePath("/admin");
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update booking status" };
   }
 }
@@ -161,7 +174,7 @@ export async function promoteToAdmin(formData: FormData) {
 
     revalidatePath("/admin");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to promote user" };
   }
 }
@@ -178,7 +191,7 @@ export async function deleteRoom(formData: FormData) {
     revalidatePath("/admin");
     revalidatePath("/rooms");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to delete room" };
   }
 }
@@ -195,7 +208,7 @@ export async function toggleRoomAvailability(formData: FormData) {
     revalidatePath("/admin");
     revalidatePath("/rooms");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update room status" };
   }
 }
@@ -207,6 +220,7 @@ export async function updateRoom(formData: FormData) {
   const pricePerNight = Number(formData.get("pricePerNight"));
   const capacity = Number(formData.get("capacity"));
   const roomClass = formData.get("roomClass") as string;
+  const amenitiesRaw = formData.get("amenities") as string | null;
   const imageFile = formData.get("image") as File;
 
   if (!roomId) return { error: "Room ID is required" };
@@ -215,13 +229,20 @@ export async function updateRoom(formData: FormData) {
     await connectDB();
     const Room = await import("@/models/Room").then(m => m.default);
     
-    let updateData: any = {
+    const updateData: Record<string, unknown> = {
       name,
       description,
       pricePerNight,
       capacity,
       roomClass
     };
+
+    if (amenitiesRaw !== null) {
+      updateData.amenities = amenitiesRaw
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean);
+    }
 
     if (imageFile && imageFile.size > 0) {
       const imageUrl = await uploadImage(imageFile);
@@ -234,7 +255,7 @@ export async function updateRoom(formData: FormData) {
     revalidatePath("/rooms");
     revalidatePath(`/rooms/${roomId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update room" };
   }
 }

@@ -1,38 +1,134 @@
-import { updateHeroImage, createRoom, updateSiteSettings, updateBookingStatus, promoteToAdmin } from "@/lib/adminActions";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import connectDB from "@/lib/db";
 import Room from "@/models/Room";
 import Booking from "@/models/Booking";
 import Feedback from "@/models/Feedback";
 import SiteSetting from "@/models/SiteSetting";
-import AdminBookingActions from "@/components/AdminBookingActions";
-import { HeroImageForm, SiteSettingsForm, CreateRoomForm, AdminPromotionForm, RoomManagementActions } from "@/components/AdminForms";
-import Link from "next/link";
-import LogoutButton from "@/components/LogoutButton";
+import User from "@/models/User";
+import { auth } from "../../../auth";
+import SiteHeader from "@/components/navigation/SiteHeader";
+import SiteFooter from "@/components/navigation/SiteFooter";
+import AdminStats, { type AdminStat } from "@/components/admin/AdminStats";
+import BookingsTable, {
+  type AdminBookingRow,
+} from "@/components/admin/BookingsTable";
+import { RoomManagementActions } from "@/components/AdminForms";
+import {
+  HeroImageForm,
+  SiteSettingsForm,
+  CreateRoomForm,
+  AdminPromotionForm,
+} from "@/components/AdminForms";
+import EmptyState from "@/components/ui/EmptyState";
 import { formatPrice } from "@/lib/format";
 
-import { auth } from "../../../auth";
-import { redirect } from "next/navigation";
+function formatDate(iso: string | Date) {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default async function AdminDashboard() {
   const session = await auth();
-
   if (session?.user?.role !== "admin") {
     redirect("/login");
   }
 
   await connectDB();
-  const rooms = await Room.find().sort({ createdAt: -1 });
-  const bookings = await Booking.find().populate("room user").sort({ createdAt: -1 }).limit(20);
-  const feedbacks = await Feedback.find().sort({ createdAt: -1 }).limit(20);
 
-  const adminEmailSetting = await SiteSetting.findOne({ key: "admin_email" });
-  const contactPhoneSetting = await SiteSetting.findOne({ key: "contact_phone" });
-  const contactEmailSetting = await SiteSetting.findOne({ key: "contact_email" });
-  const heroImageSetting = await SiteSetting.findOne({ key: "hero_image" });
-  const bankNameSetting = await SiteSetting.findOne({ key: "bank_name" });
-  const accountNumberSetting = await SiteSetting.findOne({ key: "account_number" });
-  const accountNameSetting = await SiteSetting.findOne({ key: "account_name" });
-  const billingAddressSetting = await SiteSetting.findOne({ key: "billing_address" });
+  const [
+    rooms,
+    bookingDocs,
+    feedbacks,
+    guests,
+    pendingCount,
+    awaitingCount,
+    totalBookings,
+    revenueAgg,
+    adminEmailSetting,
+    contactPhoneSetting,
+    contactEmailSetting,
+    bankNameSetting,
+    accountNumberSetting,
+    accountNameSetting,
+    billingAddressSetting,
+    socialInstagramSetting,
+    socialFacebookSetting,
+  ] = await Promise.all([
+    Room.find().sort({ createdAt: -1 }),
+    Booking.find().populate("room user").sort({ createdAt: -1 }).limit(30),
+    Feedback.find().sort({ createdAt: -1 }).limit(12),
+    User.find().select("name email role createdAt").sort({ createdAt: -1 }).limit(50),
+    Booking.countDocuments({ status: "pending_approval" }),
+    Booking.countDocuments({ status: "approved_awaiting_payment" }),
+    Booking.countDocuments(),
+    Booking.aggregate([
+      { $match: { status: "paid_confirmed" } },
+      { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+    ]),
+    SiteSetting.findOne({ key: "admin_email" }),
+    SiteSetting.findOne({ key: "contact_phone" }),
+    SiteSetting.findOne({ key: "contact_email" }),
+    SiteSetting.findOne({ key: "bank_name" }),
+    SiteSetting.findOne({ key: "account_number" }),
+    SiteSetting.findOne({ key: "account_name" }),
+    SiteSetting.findOne({ key: "billing_address" }),
+    SiteSetting.findOne({ key: "social_instagram" }),
+    SiteSetting.findOne({ key: "social_facebook" }),
+  ]);
+
+  const stats: AdminStat[] = [
+    {
+      label: "Rooms",
+      value: String(rooms.length),
+      hint: `${rooms.filter((r) => r.isAvailable).length} visible to guests`,
+    },
+    {
+      label: "Pending requests",
+      value: String(pendingCount),
+      hint: pendingCount > 0 ? "Awaiting your approval" : "All caught up",
+    },
+    {
+      label: "Awaiting payment",
+      value: String(awaitingCount),
+      hint: "Approved, payment pending",
+    },
+    {
+      label: "Confirmed revenue",
+      value: `₦${formatPrice(revenueAgg[0]?.total ?? 0)}`,
+      hint: "From confirmed payments",
+    },
+    {
+      label: "Guests",
+      value: String(await User.countDocuments()),
+      hint: `${totalBookings} bookings total`,
+    },
+  ];
+
+  const bookings: AdminBookingRow[] = bookingDocs.map((b) => {
+    const user =
+      b.user && typeof b.user === "object" && "name" in (b.user as object)
+        ? (b.user as { name?: string; email?: string })
+        : null;
+    const room =
+      b.room && typeof b.room === "object" && "name" in (b.room as object)
+        ? (b.room as { name?: string })
+        : null;
+    return {
+      _id: b._id.toString(),
+      guestName: user?.name,
+      guestEmail: user?.email,
+      roomName: room?.name,
+      checkIn: new Date(b.checkInDate).toISOString(),
+      checkOut: new Date(b.checkOutDate).toISOString(),
+      totalPrice: b.totalPrice,
+      status: b.status,
+      paymentReference: b.paymentReference ?? undefined,
+    };
+  });
 
   const currentSettings = {
     adminEmail: adminEmailSetting?.value,
@@ -42,199 +138,315 @@ export default async function AdminDashboard() {
     accountNumber: accountNumberSetting?.value,
     accountName: accountNameSetting?.value,
     billingAddress: billingAddressSetting?.value,
+    socialInstagram: socialInstagramSetting?.value,
+    socialFacebook: socialFacebookSetting?.value,
   };
 
   return (
     <>
-      <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
-        <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          LUXURY
-        </Link>
-        <div className="flex items-center gap-4 md:gap-6">
-          <span className="text-white/70 text-xs hidden sm:inline font-body">Admin Panel</span>
-          <Link href="/" className="text-accent-gold text-[11px] md:text-sm tracking-widest uppercase hover:text-white transition-colors">
-            Exit
-          </Link>
-          <LogoutButton />
-        </div>
-      </nav>
-
-      <div className="container py-8 md:py-16 max-w-7xl">
-        <div className="flex flex-col sm:row justify-between items-start sm:items-center gap-4 mb-12 border-b border-outline-ghost pb-6">
-          <h1 className="text-3xl md:text-4xl text-text-main font-headline uppercase tracking-widest">Admin Dashboard</h1>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-        
-        {/* Settings Column */}
-        <div>
-          <div className="card p-8 mb-8">
-            <h2 className="text-2xl font-headline tracking-widest text-text-main mb-6 uppercase">Site Settings</h2>
-            
-            <HeroImageForm />
-
-            <h3 className="text-lg font-headline tracking-widest text-text-main mb-4 uppercase">Contact Information</h3>
-            <SiteSettingsForm settings={currentSettings} />
+      <SiteHeader variant="solid" />
+      <main>
+        {/* Page header */}
+        <section className="bg-cream pb-12 pt-14 md:pb-14 md:pt-20">
+          <div className="container">
+            <p className="overline">Administration</p>
+            <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <h1 className="heading-xl text-charcoal">Hotel operations</h1>
+              <p className="font-body text-sm text-warmgrey">
+                {new Date().toLocaleDateString("en-GB", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+            <div className="mt-8">
+              <AdminStats stats={stats} />
+            </div>
           </div>
+        </section>
 
-          <div className="card p-8 mb-8">
-            <h2 className="text-2xl font-headline tracking-widest text-text-main mb-6 uppercase">Admin Management</h2>
-            <p className="text-sm text-text-muted mb-6">
-              Enter the email of a registered user to grant them admin privileges.
-            </p>
-            <AdminPromotionForm />
+        <section className="section">
+          <div className="container grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Main column */}
+            <div className="flex flex-col gap-10 lg:col-span-8">
+              {/* Bookings */}
+              <div className="card p-0">
+                <div className="flex items-end justify-between gap-4 border-b border-line px-5 py-5 sm:px-6">
+                  <div>
+                    <p className="overline">Reservations</p>
+                    <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                      Recent bookings
+                    </h2>
+                  </div>
+                  <p className="hidden font-body text-xs text-warmgrey sm:block">
+                    Latest 30
+                  </p>
+                </div>
+                <BookingsTable bookings={bookings} />
+              </div>
+
+              {/* Rooms */}
+              <div className="card p-0">
+                <div className="flex items-end justify-between gap-4 border-b border-line px-5 py-5 sm:px-6">
+                  <div>
+                    <p className="overline">Inventory</p>
+                    <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                      Manage rooms
+                    </h2>
+                  </div>
+                  <Link
+                    href="/rooms"
+                    className="link-underline font-body text-xs text-charcoal hover:text-gold"
+                  >
+                    View public listing
+                  </Link>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px] text-left">
+                    <thead>
+                      <tr className="border-b border-line">
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey sm:px-6">
+                          Room
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Class
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Price / night
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Capacity
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Status
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rooms.map((room) => (
+                        <tr
+                          key={room._id.toString()}
+                          className="border-b border-line/70 transition-colors hover:bg-cream/60"
+                        >
+                          <td className="px-5 py-4 sm:px-6">
+                            <div className="font-body text-sm font-medium text-charcoal">
+                              {room.name}
+                            </div>
+                            <div className="mt-0.5 font-body text-xs text-warmgrey">
+                              {(room.amenities ?? []).length} amenities
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 font-body text-sm text-warmgrey">
+                            {room.roomClass || "—"}
+                          </td>
+                          <td className="px-5 py-4 font-heading text-lg text-charcoal">
+                            ₦{formatPrice(room.pricePerNight)}
+                          </td>
+                          <td className="px-5 py-4 font-body text-sm text-warmgrey">
+                            {room.capacity} guests
+                          </td>
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex items-center px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.16em] ${
+                                room.isAvailable
+                                  ? "bg-forest/10 text-forest border border-forest/30"
+                                  : "bg-cream text-warmgrey border border-line"
+                              }`}
+                            >
+                              {room.isAvailable ? "Visible" : "Hidden"}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <RoomManagementActions
+                              room={JSON.parse(JSON.stringify(room))}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                      {rooms.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="px-6 py-10 text-center font-body text-sm text-warmgrey"
+                          >
+                            No rooms added yet — create one from the panel.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Guests */}
+              <div className="card p-0">
+                <div className="border-b border-line px-5 py-5 sm:px-6">
+                  <p className="overline">People</p>
+                  <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                    Registered guests
+                  </h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[520px] text-left">
+                    <thead>
+                      <tr className="border-b border-line">
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey sm:px-6">
+                          Name
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Email
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Role
+                        </th>
+                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
+                          Joined
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {guests.map((guest) => (
+                        <tr
+                          key={guest._id.toString()}
+                          className="border-b border-line/70 transition-colors hover:bg-cream/60"
+                        >
+                          <td className="px-5 py-4 font-body text-sm font-medium text-charcoal sm:px-6">
+                            {guest.name}
+                          </td>
+                          <td className="px-5 py-4 font-body text-sm text-warmgrey">
+                            {guest.email}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex items-center px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.16em] ${
+                                guest.role === "admin"
+                                  ? "bg-gold/15 text-gold-deep border border-gold/40"
+                                  : "bg-cream text-warmgrey border border-line"
+                              }`}
+                            >
+                              {guest.role}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 font-body text-xs text-warmgrey">
+                            {formatDate(guest.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
+                      {guests.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="px-6 py-10 text-center font-body text-sm text-warmgrey"
+                          >
+                            No registered users yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Feedback */}
+              <div className="card p-0">
+                <div className="border-b border-line px-5 py-5 sm:px-6">
+                  <p className="overline">Voices</p>
+                  <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                    Guest feedback
+                  </h2>
+                </div>
+                {feedbacks.length === 0 ? (
+                  <div className="p-6">
+                    <EmptyState
+                      title="No feedback yet"
+                      message="Guest reviews submitted through the feedback page will appear here."
+                    />
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {feedbacks.map((feedback) => (
+                      <li key={feedback._id.toString()} className="px-5 py-5 sm:px-6">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <div>
+                            <span className="font-body text-sm font-medium text-charcoal">
+                              {feedback.name}
+                            </span>
+                            <span className="ml-3 font-body text-xs text-warmgrey">
+                              {feedback.email}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {feedback.rating != null && (
+                              <span className="font-body text-sm tracking-[0.2em] text-gold">
+                                {"★".repeat(feedback.rating)}
+                                <span className="text-line">
+                                  {"★".repeat(5 - feedback.rating)}
+                                </span>
+                              </span>
+                            )}
+                            <span className="font-body text-[10px] uppercase tracking-[0.16em] text-warmgrey">
+                              {formatDate(feedback.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="mt-2 font-body text-sm leading-relaxed text-warmgrey">
+                          {feedback.message}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <aside className="flex flex-col gap-8 lg:col-span-4">
+              <div className="card p-6 lg:sticky lg:top-24">
+                <p className="overline">Quick actions</p>
+                <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                  Add new room
+                </h2>
+                <div className="mt-5">
+                  <CreateRoomForm />
+                </div>
+              </div>
+
+              <div className="card p-6">
+                <p className="overline">Configuration</p>
+                <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                  Site settings
+                </h2>
+                <div className="mt-5">
+                  <HeroImageForm />
+                  <div className="pt-6">
+                    <SiteSettingsForm settings={currentSettings} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="card p-6">
+                <p className="overline">Access</p>
+                <h2 className="mt-2 font-heading text-2xl text-charcoal">
+                  Admin management
+                </h2>
+                <p className="mt-2 font-body text-sm leading-relaxed text-warmgrey">
+                  Enter the email of a registered user to grant them admin
+                  privileges.
+                </p>
+                <div className="mt-5">
+                  <AdminPromotionForm />
+                </div>
+              </div>
+            </aside>
           </div>
-        </div>
-
-        {/* Rooms Column */}
-        <div>
-          <div className="card p-8 mb-8">
-            <h2 className="text-2xl font-headline tracking-widest text-text-main mb-6 uppercase">Add New Room</h2>
-            <CreateRoomForm />
-          </div>
-        </div>
-      </div>
-
-      {/* Existing Rooms List */}
-      <h2 className="text-2xl font-headline tracking-widest text-text-main mt-16 mb-8 uppercase border-b border-outline-ghost pb-4">Manage Rooms</h2>
-      <div className="overflow-x-auto card">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-outline-ghost bg-surface-dim">
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Name</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Price</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Capacity</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Status</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map(room => (
-              <tr key={room._id.toString()} className="border-b border-outline-ghost hover:bg-surface-dim/50 transition-colors">
-                <td className="p-4 font-body font-semibold text-text-main">{room.name}</td>
-                <td className="p-4 text-accent-gold font-body">₦{formatPrice(room.pricePerNight)}</td>
-                <td className="p-4 text-text-muted">{room.capacity}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 text-xs rounded uppercase tracking-widest ${room.isAvailable ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-                    {room.isAvailable ? "Available" : "Hidden"}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <RoomManagementActions room={JSON.parse(JSON.stringify(room))} />
-                </td>
-              </tr>
-            ))}
-            {rooms.length === 0 && (
-              <tr>
-                <td colSpan={4} className="p-8 text-center text-text-muted italic">No rooms added yet.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bookings List */}
-      <h2 className="text-2xl font-headline tracking-widest text-text-main mt-16 mb-8 uppercase border-b border-outline-ghost pb-4">Recent Bookings</h2>
-      <div className="overflow-x-auto card">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-outline-ghost bg-surface-dim">
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Guest / Email</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Room</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Check In / Out</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Total</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Status</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map(booking => (
-              <tr key={booking._id.toString()} className="border-b border-outline-ghost hover:bg-surface-dim/50 transition-colors">
-                <td className="p-4">
-                  <div className="font-semibold text-text-main">{booking.user?.name || "N/A"}</div>
-                  <div className="text-xs text-text-muted">{booking.user?.email}</div>
-                  {booking.paymentReference && (
-                    <div className="mt-2 text-[10px] text-accent-gold uppercase tracking-tighter">
-                      REF: {booking.paymentReference}
-                    </div>
-                  )}
-                </td>
-                <td className="p-4 text-text-main">{booking.room?.name || "N/A"}</td>
-                <td className="p-4 text-sm text-text-muted">
-                  {new Date(booking.checkInDate).toLocaleDateString()} <br /> 
-                  <span className="text-outline-ghost">to</span> <br /> 
-                  {new Date(booking.checkOutDate).toLocaleDateString()}
-                </td>
-                <td className="p-4 text-accent-gold font-semibold">₦{formatPrice(booking.totalPrice)}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 text-xs rounded uppercase tracking-widest border ${
-                    booking.status === 'paid_confirmed' ? 'bg-accent-gold/10 text-accent-gold border-accent-gold/20' : 
-                    booking.status === 'approved_awaiting_payment' ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' :
-                    booking.status === 'declined' ? 'bg-red-900/20 text-red-400 border-red-900/30' :
-                    'bg-surface-dim text-text-muted border-outline-ghost'
-                  }`}>
-                    {booking.status.replace(/_/g, ' ')}
-                  </span>
-                </td>
-                <td className="p-4">
-                  {booking.status === "pending_approval" && (
-                    <AdminBookingActions bookingId={booking._id.toString()} />
-                  )}
-                  {booking.status === "paid_confirmed" && (
-                    <span className="text-accent-gold font-semibold text-xs tracking-widest uppercase">Paid</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {bookings.length === 0 && (
-              <tr>
-                <td colSpan={6} className="p-8 text-center text-text-muted italic">No bookings received yet.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Feedbacks List */}
-      <h2 className="text-2xl font-headline tracking-widest text-text-main mt-16 mb-8 uppercase border-b border-outline-ghost pb-4">Recent Feedback</h2>
-      <div className="overflow-x-auto card">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-outline-ghost bg-surface-dim">
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Name</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Rating</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-muted">Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            {feedbacks.map(feedback => (
-              <tr key={feedback._id.toString()} className="border-b border-outline-ghost hover:bg-surface-dim/50 transition-colors">
-                <td className="p-4">
-                  <div className="font-semibold text-text-main">{feedback.name}</div>
-                  <div className="text-xs text-text-muted">{feedback.email}</div>
-                </td>
-                <td className="p-4">
-                  {feedback.rating ? (
-                    <span className="text-accent-gold text-lg">
-                      {"★".repeat(feedback.rating)}{"☆".repeat(5 - feedback.rating)}
-                    </span>
-                  ) : (
-                    <span className="text-text-muted">N/A</span>
-                  )}
-                </td>
-                <td className="p-4 text-sm text-text-muted max-w-md">{feedback.message}</td>
-              </tr>
-            ))}
-            {feedbacks.length === 0 && (
-              <tr>
-                <td colSpan={3} className="p-8 text-center text-text-muted italic">No feedback received yet.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      </div>
+        </section>
+      </main>
+      <SiteFooter />
     </>
   );
 }
-

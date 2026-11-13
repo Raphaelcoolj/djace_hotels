@@ -16,30 +16,39 @@ export default function PaymentForm({ bookingId }: { bookingId: string }) {
         toast.success("Payment confirmed! Your receipt is ready.");
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       toast.error("Failed to process payment.");
     }
   }
 
   return (
-    <form action={handleSubmit} className="mt-2">
+    <form action={handleSubmit} className="mt-5 border-t border-line pt-5">
       <input type="hidden" name="bookingId" value={bookingId} />
-      <div className="flex flex-col gap-2 mb-2">
-        <select name="paymentMethod" required className="input-field p-2 text-sm bg-background/50">
-          <option value="">Select Payment Method</option>
-          <option value="bank_transfer">Bank Transfer</option>
-          <option value="ussd">USSD</option>
-          <option value="pos_atm">POS / ATM</option>
-        </select>
-        <input 
-          type="text" 
-          name="paymentReference" 
-          placeholder="Transaction Ref / Session ID" 
-          required 
-          className="input-field p-2 text-sm bg-background/50"
-        />
-      </div>
-      <button type="submit" className="btn btn-gold w-full py-2 text-xs">Confirm Payment</button>
+      <p className="input-label">Payment method</p>
+      <select name="paymentMethod" required className="input-field mb-4">
+        <option value="">Select payment method</option>
+        <option value="bank_transfer">Bank transfer</option>
+        <option value="ussd">USSD</option>
+        <option value="pos_atm">POS / ATM</option>
+      </select>
+      <label className="input-label" htmlFor={`pay-ref-${bookingId}`}>
+        Transaction reference
+      </label>
+      <input
+        id={`pay-ref-${bookingId}`}
+        type="text"
+        name="paymentReference"
+        placeholder="Transaction ref / session ID"
+        required
+        className="input-field"
+      />
+      <button type="submit" className="btn btn-gold btn-block mt-4">
+        Confirm Payment
+      </button>
+      <p className="mt-3 font-body text-[11px] leading-relaxed text-warmgrey">
+        Your payment is reviewed by our team before your reservation is marked
+        as confirmed.
+      </p>
     </form>
   );
 }

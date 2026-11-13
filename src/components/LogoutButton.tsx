@@ -2,26 +2,55 @@
 
 import { signOut } from "next-auth/react";
 
-export default function LogoutButton() {
+type LogoutButtonProps = {
+  /** "light" = for dark backgrounds, "dark" = for light backgrounds */
+  tone?: "light" | "dark";
+  /** Render as a full button (used in the mobile menu) */
+  asButton?: boolean;
+  className?: string;
+};
+
+export default function LogoutButton({
+  tone = "light",
+  asButton = false,
+  className = "",
+}: LogoutButtonProps) {
+  const handleLogout = async () => {
+    // Clear all session storage and cookies
+    await signOut({ redirect: false });
+
+    // Manual cleanup for stuck sessions
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
+    // Force a complete reload from the server
+    window.location.href = window.location.origin + "/?logout=" + Date.now();
+  };
+
+  if (asButton) {
+    return (
+      <button
+        type="button"
+        onClick={handleLogout}
+        className={`btn btn-outline btn-sm ${className}`}
+      >
+        Sign out
+      </button>
+    );
+  }
+
   return (
-    <button 
-      onClick={async () => {
-        // Clear all session storage and cookies
-        await signOut({ redirect: false });
-        
-        // Manual cleanup for stuck sessions
-        document.cookie.split(";").forEach((c) => {
-          document.cookie = c
-            .replace(/^ +/, "")
-            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-        
-        // Force a complete reload from the server
-        window.location.href = window.location.origin + "/?logout=" + Date.now();
-      }}
-      className="text-white font-body text-[10px] md:text-sm tracking-widest uppercase hover:text-accent-gold transition-colors cursor-pointer"
+    <button
+      type="button"
+      onClick={handleLogout}
+      className={`cursor-pointer link-underline transition-colors duration-300 ${
+        tone === "light" ? "text-ivory hover:text-gold" : "text-charcoal hover:text-gold"
+      } ${className}`}
     >
-      Logout
+      Sign out
     </button>
   );
 }

@@ -1,124 +1,196 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import connectDB from "@/lib/db";
 import Booking from "@/models/Booking";
-import { auth } from "../../../auth";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+import User from "@/models/User";
 import SiteSetting from "@/models/SiteSetting";
-import LogoutButton from "@/components/LogoutButton";
-import PaymentForm from "@/components/PaymentForm";
-import { formatPrice } from "@/lib/format";
+import { auth } from "../../../auth";
+import SiteHeader from "@/components/navigation/SiteHeader";
+import SiteFooter from "@/components/navigation/SiteFooter";
+import BookingCard, {
+  type DashboardBooking,
+} from "@/components/dashboard/BookingCard";
+import EmptyState from "@/components/ui/EmptyState";
+import Reveal from "@/components/ui/Reveal";
 
 export default async function DashboardPage() {
   const session = await auth();
-  
   if (!session?.user?.id) {
     redirect("/login");
   }
 
   await connectDB();
+  const [
+    bookingDocs,
+    user,
+    bankName,
+    accountNumber,
+    accountName,
+    billingAddress,
+    contactPhone,
+    contactEmail,
+  ] = await Promise.all([
+    Booking.find({ user: session.user.id })
+      .populate("room", "name images roomClass")
+      .sort({ createdAt: -1 }),
+    User.findById(session.user.id).select("name email createdAt"),
+    SiteSetting.findOne({ key: "bank_name" }),
+    SiteSetting.findOne({ key: "account_number" }),
+    SiteSetting.findOne({ key: "account_name" }),
+    SiteSetting.findOne({ key: "billing_address" }),
+    SiteSetting.findOne({ key: "contact_phone" }),
+    SiteSetting.findOne({ key: "contact_email" }),
+  ]);
 
-  const bookings = await Booking.find({ user: session.user.id })
-    .populate("room", "name image") // populating room to get name
-    .sort({ createdAt: -1 });
+  const bookings: DashboardBooking[] = bookingDocs.map((b) => {
+    const room =
+      b.room && typeof b.room === "object" && "name" in (b.room as object)
+        ? (b.room as { name?: string; images?: string[]; roomClass?: string })
+        : null;
+    return {
+      _id: b._id.toString(),
+      checkInDate: new Date(b.checkInDate).toISOString(),
+      checkOutDate: new Date(b.checkOutDate).toISOString(),
+      totalPrice: b.totalPrice,
+      status: b.status,
+      paymentReference: b.paymentReference ?? undefined,
+      room,
+    };
+  });
 
-  const bankName = await SiteSetting.findOne({ key: "bank_name" });
-  const accountNumber = await SiteSetting.findOne({ key: "account_number" });
-  const accountName = await SiteSetting.findOne({ key: "account_name" });
-  const billingAddress = await SiteSetting.findOne({ key: "billing_address" });
-  const phoneSetting = await SiteSetting.findOne({ key: "contact_phone" });
-  const emailSetting = await SiteSetting.findOne({ key: "contact_email" });
+  const bank = {
+    bankName: bankName?.value,
+    accountNumber: accountNumber?.value,
+    accountName: accountName?.value,
+    billingAddress: billingAddress?.value,
+  };
+
+  const firstName = session.user.name?.split(" ")[0] ?? "there";
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-GB", {
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   return (
-    <main className="min-h-screen bg-background">
-      <nav className="bg-primary p-4 md:p-8 flex justify-between items-center border-b border-white/10">
-        <Link href="/" className="text-white font-headline text-xl md:text-2xl tracking-widest uppercase">
-          LUXURY
-        </Link>
-        <div className="flex items-center gap-3 md:gap-6">
-          <span className="text-white/70 text-[10px] sm:text-xs hidden sm:inline font-body">Welcome, {session.user.name}</span>
-          {session.user.role === "admin" && (
-            <Link href="/admin" className="text-accent-gold text-[11px] md:text-sm tracking-widest uppercase hover:text-white transition-colors">
-              Admin
-            </Link>
-          )}
-          <LogoutButton />
-        </div>
-      </nav>
-
-      <div className="container py-16 max-w-4xl">
-        <h1 className="text-4xl text-text-main font-headline tracking-widest uppercase mb-12">Your Reservations</h1>
-
-        {bookings.length === 0 ? (
-          <div className="card p-16 text-center">
-            <h2 className="text-xl text-text-main mb-4">No reservations found</h2>
-            <p className="text-text-muted mb-8">You haven't booked any rooms yet.</p>
-            <Link href="/rooms" className="btn btn-gold">Browse Rooms</Link>
+    <>
+      <SiteHeader variant="solid" />
+      <main>
+        {/* Welcome band */}
+        <section className="bg-cream pb-12 pt-14 md:pb-14 md:pt-20">
+          <div className="container">
+            <p className="overline">Guest portal</p>
+            <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <h1 className="heading-xl text-charcoal">
+                Welcome back, {firstName}
+              </h1>
+              <p className="font-body text-sm text-warmgrey">
+                {bookings.length}{" "}
+                {bookings.length === 1 ? "reservation" : "reservations"} on file
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            {bookings.map((booking) => (
-              <div key={booking._id.toString()} className="card p-6 md:p-8 flex flex-col md:flex-row justify-between md:items-center gap-6">
-                <div>
-                  <h3 className="text-xl font-headline text-text-main tracking-wide mb-2">{booking.room?.name || "Room No Longer Available"}</h3>
-                  <div className="text-sm text-text-muted flex flex-col gap-1">
-                    <p>Check In: <span className="text-text-main">{new Date(booking.checkInDate).toLocaleDateString()}</span></p>
-                    <p>Check Out: <span className="text-text-main">{new Date(booking.checkOutDate).toLocaleDateString()}</span></p>
-                    <p className="mt-2 text-base">Total: <span className="text-accent-gold font-semibold">₦{formatPrice(booking.totalPrice)}</span></p>
-                  </div>
+        </section>
+
+        <section className="section">
+          <div className="container grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Reservations */}
+            <div className="lg:col-span-8">
+              <h2 className="overline-muted mb-6">Your reservations</h2>
+
+              {bookings.length === 0 ? (
+                <EmptyState
+                  title="No reservations yet"
+                  message="When you request a reservation, it will appear here with its live status and payment details."
+                  actionLabel="Browse rooms"
+                  actionHref="/rooms"
+                />
+              ) : (
+                <div className="flex flex-col gap-6">
+                  {bookings.map((booking, i) => (
+                    <Reveal
+                      key={booking._id}
+                      delay={(((i % 3) + 1) as 1 | 2 | 3)}
+                    >
+                      <BookingCard booking={booking} bank={bank} />
+                    </Reveal>
+                  ))}
                 </div>
-                
-                <div className="flex flex-col gap-4 min-w-[200px] text-right">
-                  <span className={`inline-block px-4 py-2 text-xs font-semibold uppercase tracking-widest rounded text-center ${
-                    booking.status === 'paid_confirmed' ? 'bg-accent-gold text-primary' : 'bg-surface-dim text-text-main border border-outline-ghost'
-                  }`}>
-                    {booking.status.replace(/_/g, ' ')}
-                  </span>
+              )}
+            </div>
 
-                  {booking.status === "approved_awaiting_payment" && (
-                    <div className="mt-4 p-4 bg-surface-dim border border-accent-gold/20 text-left">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-gold mb-2">Payment Instructions</h4>
-                      <div className="text-[11px] text-text-muted flex flex-col gap-1">
-                        <p>Bank: <span className="text-text-main font-semibold">{bankName?.value || "Not Set"}</span></p>
-                        <p>A/C Number: <span className="text-text-main font-semibold">{accountNumber?.value || "Not Set"}</span></p>
-                        <p>A/C Name: <span className="text-text-main font-semibold">{accountName?.value || "Not Set"}</span></p>
-                        <p className="mt-1">Billing Address: <span className="text-text-main">{billingAddress?.value || "N/A"}</span></p>
-                      </div>
-                    </div>
-                  )}
+            {/* Sidebar */}
+            <aside className="flex flex-col gap-6 lg:col-span-4">
+              <div className="card p-6">
+                <h2 className="overline">Profile</h2>
+                <p className="mt-4 font-heading text-2xl text-charcoal">
+                  {session.user.name}
+                </p>
+                <p className="mt-1 font-body text-sm text-warmgrey">
+                  {session.user.email}
+                </p>
+                {memberSince && (
+                  <p className="mt-4 border-t border-line pt-4 font-body text-xs tracking-wide text-warmgrey">
+                    Guest since {memberSince}
+                  </p>
+                )}
+              </div>
 
-                  {booking.status === "approved_awaiting_payment" && (
-                    <PaymentForm bookingId={booking._id.toString()} />
+              <div className="card p-6">
+                <h2 className="overline">Quick actions</h2>
+                <nav className="mt-4 flex flex-col gap-3">
+                  <Link
+                    href="/rooms"
+                    className="link-underline w-fit text-charcoal hover:text-gold"
+                  >
+                    Browse rooms
+                  </Link>
+                  <Link
+                    href="/feedback"
+                    className="link-underline w-fit text-charcoal hover:text-gold"
+                  >
+                    Share feedback
+                  </Link>
+                  <Link
+                    href="/"
+                    className="link-underline w-fit text-charcoal hover:text-gold"
+                  >
+                    Back to home
+                  </Link>
+                </nav>
+              </div>
+
+              <div className="card bg-cream/60 p-6">
+                <h2 className="overline">Need help?</h2>
+                <p className="mt-4 font-body text-sm leading-relaxed text-warmgrey">
+                  Our team is happy to assist with reservations, payments or
+                  changes to your stay.
+                </p>
+                <div className="mt-4 flex flex-col gap-2 font-body text-sm">
+                  {contactPhone?.value && (
+                    <a
+                      href={`tel:${contactPhone.value.replace(/[^\d+]/g, "")}`}
+                      className="text-charcoal transition-colors hover:text-gold"
+                    >
+                      {contactPhone.value}
+                    </a>
                   )}
-                  {booking.status === "paid_confirmed" && (
-                    <div className="flex flex-col gap-2">
-                      <span className="inline-block px-4 py-2 text-xs font-semibold uppercase tracking-widest rounded text-center bg-accent-gold text-primary">
-                        Paid
-                      </span>
-                      <a 
-                        href={`https://wa.me/?text=${encodeURIComponent(`Hello, I've just paid for my booking at Luxury Hotel.\n\nBooking ID: ${booking._id}\nReference: ${booking.paymentReference}\nRoom: ${booking.room?.name}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] text-center text-text-muted hover:text-accent-gold transition-colors underline"
-                      >
-                        Send Receipt via WhatsApp
-                      </a>
-                    </div>
+                  {contactEmail?.value && (
+                    <a
+                      href={`mailto:${contactEmail.value}`}
+                      className="text-charcoal transition-colors hover:text-gold"
+                    >
+                      {contactEmail.value}
+                    </a>
                   )}
                 </div>
               </div>
-            ))}
+            </aside>
           </div>
-        )}
-      </div>
-
-      <footer className="bg-surface-dim border-t border-outline-ghost py-16 text-center mt-16">
-        <h2 className="font-headline text-2xl text-text-main mb-6 tracking-widest uppercase">Luxury Hotel</h2>
-        <div className="flex flex-col md:flex-row justify-center gap-8 mb-8 text-text-muted text-sm">
-          <p>Contact: {phoneSetting?.value || "+1 (555) 123-4567"}</p>
-          <p>Email: {emailSetting?.value || "reservations@luxuryhotel.com"}</p>
-        </div>
-        <p className="text-text-muted text-xs">&copy; {new Date().getFullYear()} Luxury Hotel & Lounge. All rights reserved.</p>
-      </footer>
-    </main>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
