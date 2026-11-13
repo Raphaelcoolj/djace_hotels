@@ -15,7 +15,7 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import SmartImage from "@/components/ui/SmartImage";
 
-type AdminRoom = {
+export type AdminRoom = {
   _id: string;
   name: string;
   description: string;
@@ -472,10 +472,17 @@ export function AdminPromotionForm() {
   );
 }
 
-export function RoomManagementActions({ room }: { room: AdminRoom }) {
+export function RoomManagementActions({
+  room,
+  isEditing,
+  onToggleEdit,
+}: {
+  room: AdminRoom;
+  isEditing: boolean;
+  onToggleEdit: () => void;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   const roomId = room._id.toString();
   const isAvailable = room.isAvailable;
@@ -517,41 +524,30 @@ export function RoomManagementActions({ room }: { room: AdminRoom }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setIsEditing(!isEditing)}
-          className="border border-line px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] text-charcoal transition-colors duration-300 hover:border-charcoal"
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </button>
-        <button
-          type="button"
-          onClick={handleToggle}
-          disabled={loading}
-          className="border border-gold/40 bg-gold/10 px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] text-gold-deep transition-colors duration-300 hover:bg-gold/20 disabled:opacity-50"
-        >
-          {isAvailable ? "Hide" : "Show"}
-        </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={loading}
-          className="border border-danger/30 px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] text-danger transition-colors duration-300 hover:bg-danger/10 disabled:opacity-50"
-        >
-          Delete
-        </button>
-      </div>
-
-      {isEditing && (
-        <div className="border border-line bg-cream/50 p-4">
-          <h4 className="mb-4 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal">
-            Edit room
-          </h4>
-          <EditRoomForm room={room} onSuccess={() => setIsEditing(false)} />
-        </div>
-      )}
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={onToggleEdit}
+        className="border border-line px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] text-charcoal transition-colors duration-300 hover:border-charcoal"
+      >
+        {isEditing ? "Cancel" : "Edit"}
+      </button>
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={loading}
+        className="border border-gold/40 bg-gold/10 px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] text-gold-deep transition-colors duration-300 hover:bg-gold/20 disabled:opacity-50"
+      >
+        {isAvailable ? "Hide" : "Show"}
+      </button>
+      <button
+        type="button"
+        onClick={handleDelete}
+        disabled={loading}
+        className="border border-danger/30 px-3 py-1.5 font-body text-[10px] uppercase tracking-[0.14em] text-danger transition-colors duration-300 hover:bg-danger/10 disabled:opacity-50"
+      >
+        Delete
+      </button>
     </div>
   );
 }

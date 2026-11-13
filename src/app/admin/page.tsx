@@ -13,7 +13,7 @@ import AdminStats, { type AdminStat } from "@/components/admin/AdminStats";
 import BookingsTable, {
   type AdminBookingRow,
 } from "@/components/admin/BookingsTable";
-import { RoomManagementActions } from "@/components/AdminForms";
+import RoomsTable from "@/components/admin/RoomsTable";
 import {
   HeroImageForm,
   SiteSettingsForm,
@@ -172,7 +172,7 @@ export default async function AdminDashboard() {
         <section className="section">
           <div className="container grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Main column */}
-            <div className="flex flex-col gap-10 lg:col-span-8">
+            <div className="flex min-w-0 flex-col gap-10 lg:col-span-8">
               {/* Bookings */}
               <div className="card p-0">
                 <div className="flex items-end justify-between gap-4 border-b border-line px-5 py-5 sm:px-6">
@@ -205,84 +205,7 @@ export default async function AdminDashboard() {
                     View public listing
                   </Link>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[600px] text-left">
-                    <thead>
-                      <tr className="border-b border-line">
-                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey sm:px-6">
-                          Room
-                        </th>
-                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
-                          Class
-                        </th>
-                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
-                          Price / night
-                        </th>
-                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
-                          Capacity
-                        </th>
-                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
-                          Status
-                        </th>
-                        <th className="px-5 py-3 font-body text-[10px] font-semibold uppercase tracking-[0.2em] text-warmgrey">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rooms.map((room) => (
-                        <tr
-                          key={room._id.toString()}
-                          className="border-b border-line/70 transition-colors hover:bg-cream/60"
-                        >
-                          <td className="px-5 py-4 sm:px-6">
-                            <div className="font-body text-sm font-medium text-charcoal">
-                              {room.name}
-                            </div>
-                            <div className="mt-0.5 font-body text-xs text-warmgrey">
-                              {(room.amenities ?? []).length} amenities
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 font-body text-sm text-warmgrey">
-                            {room.roomClass || "—"}
-                          </td>
-                          <td className="px-5 py-4 font-heading text-lg text-charcoal">
-                            ₦{formatPrice(room.pricePerNight)}
-                          </td>
-                          <td className="px-5 py-4 font-body text-sm text-warmgrey">
-                            {room.capacity} guests
-                          </td>
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex items-center px-3 py-1 font-body text-[10px] font-medium uppercase tracking-[0.16em] ${
-                                room.isAvailable
-                                  ? "bg-forest/10 text-forest border border-forest/30"
-                                  : "bg-cream text-warmgrey border border-line"
-                              }`}
-                            >
-                              {room.isAvailable ? "Visible" : "Hidden"}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4">
-                            <RoomManagementActions
-                              room={JSON.parse(JSON.stringify(room))}
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                      {rooms.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="px-6 py-10 text-center font-body text-sm text-warmgrey"
-                          >
-                            No rooms added yet — create one from the panel.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <RoomsTable rooms={JSON.parse(JSON.stringify(rooms))} />
               </div>
 
               {/* Guests */}
@@ -407,8 +330,8 @@ export default async function AdminDashboard() {
             </div>
 
             {/* Sidebar */}
-            <aside className="flex flex-col gap-8 lg:col-span-4">
-              <div className="card p-6 lg:sticky lg:top-24">
+            <aside className="flex min-w-0 flex-col gap-8 self-start lg:col-span-4">
+              <div className="card p-6">
                 <p className="overline">Quick actions</p>
                 <h2 className="mt-2 font-heading text-2xl text-charcoal">
                   Add new room
